@@ -2,6 +2,10 @@
 
 Jogo mobile de blocos com jornada pelo Brasil, perguntas regionais, desafios diários, música procedural e suporte básico a PWA.
 
+## Link publico
+
+https://thiago789.github.io/bloco-br/
+
 ## Como testar localmente
 
 Abra `index.html` direto no navegador ou rode um servidor estático:
@@ -41,3 +45,4 @@ local-server.mjs        Servidor local simples
 - O jogo é pensado primeiro para celular em modo retrato.
 - O áudio depende de interação do usuário por regra dos navegadores mobile.
 - O progresso é salvo no `localStorage` do navegador.
+- O roteiro para teste beta esta em `TESTING.md`.
