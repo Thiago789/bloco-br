@@ -1,0 +1,21 @@
+{
+  "name": "Bloco BR",
+  "short_name": "Bloco BR",
+  "description": "Jogo mobile de blocos com jornada pelo Brasil, desafios regionais e recompensas diárias.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1b2a",
+  "theme_color": "#0d1b2a",
+  "lang": "pt-BR",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

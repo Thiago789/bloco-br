@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Bloco BR</title>
+  <desc id="desc">Icone do jogo Bloco BR com blocos nas cores do Brasil.</desc>
+  <rect width="512" height="512" rx="112" fill="#0d1b2a"/>
+  <path d="M70 256 256 70l186 186-186 186Z" fill="#009C3B"/>
+  <circle cx="256" cy="256" r="104" fill="#F4C430"/>
+  <path d="M160 256c50-42 142-42 192 0-10 18-23 34-39 47-37-26-77-26-114 0-16-13-29-29-39-47Z" fill="#002776"/>
+  <g transform="translate(126 130)">
+    <rect x="0" y="0" width="72" height="72" rx="14" fill="#F4C430"/>
+    <rect x="82" y="0" width="72" height="72" rx="14" fill="#009C3B"/>
+    <rect x="164" y="0" width="72" height="72" rx="14" fill="#3A86FF"/>
+    <rect x="41" y="82" width="72" height="72" rx="14" fill="#FF6B35"/>
+    <rect x="123" y="82" width="72" height="72" rx="14" fill="#F4C430"/>
+    <rect x="82" y="164" width="72" height="72" rx="14" fill="#009C3B"/>
+  </g>
+</svg>
