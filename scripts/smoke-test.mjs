@@ -31,6 +31,9 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
+  ok('HTML tem guia de primeira sessao', html.includes('id="first-session-card"'));
+  ok('HTML tem passos da primeira sessao', html.includes('FIRST_SESSION_STEPS'));
+  ok('HTML atualiza guia de primeira sessao', html.includes('function updateFirstSessionCard()'));
   validateMobileContracts(html);
 
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(match => match[1]).join('\n');

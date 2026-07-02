@@ -73,6 +73,19 @@ canvas{display:block;position:fixed;top:0;left:0;touch-action:none;}
 #toast{position:fixed;top:30%;left:50%;transform:translateX(-50%) translateY(-8px);color:#fff;font-size:14px;font-weight:800;font-family:'Baloo 2',cursive;padding:10px 22px;border-radius:50px;opacity:0;pointer-events:none;transition:opacity .18s,transform .2s;white-space:nowrap;z-index:30;box-shadow:0 4px 20px rgba(0,0,0,.4);}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
+/* Primeira sessao */
+#first-session-card{position:fixed;left:14px;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 86px);z-index:9;background:rgba(15,30,46,.94);border:1px solid rgba(244,196,48,.24);border-radius:14px;padding:10px 12px;box-shadow:0 8px 28px rgba(0,0,0,.35);backdrop-filter:blur(10px);display:none;pointer-events:none;max-width:420px;margin:0 auto;}
+#first-session-card.show{display:block;}
+.fs-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
+.fs-title{font-size:10px;font-weight:900;letter-spacing:.9px;text-transform:uppercase;color:rgba(244,196,48,.85);}
+.fs-count{font-size:10px;font-weight:900;color:rgba(245,240,232,.55);}
+.fs-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.fs-step{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:7px 5px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-width:0;}
+.fs-step.done{background:rgba(0,156,59,.16);border-color:rgba(0,156,59,.45);}
+.fs-step-icon{font-size:15px;line-height:1;}
+.fs-step-label{font-size:8px;font-weight:900;color:rgba(245,240,232,.62);line-height:1.1;}
+.fs-step.done .fs-step-label{color:#7CFF9B;}
+
 /* Jornada */
 #ov-journey{position:fixed;inset:0;z-index:26;display:none;flex-direction:column;align-items:center;justify-content:flex-end;}
 #ov-journey.show{display:flex;}
@@ -782,6 +795,14 @@ body[data-theme] #settings-panel .sp-slider{background:var(--theme-cell);}
 </div>
 
 <div id="toast"></div>
+
+<div id="first-session-card" aria-live="polite">
+  <div class="fs-top">
+    <div class="fs-title">Primeiros passos</div>
+    <div class="fs-count" id="fs-count">0/4</div>
+  </div>
+  <div class="fs-steps" id="fs-steps"></div>
+</div>
 
 <!-- QUIZ REGIONAL -->
 <div class="overlay" id="ov-region-quiz">
@@ -4097,7 +4118,40 @@ function setVolume(val){
   }
 }
 
+const FIRST_SESSION_STEPS=[
+  {id:'place',icon:'&#9670;',label:'Pe&ccedil;a',done:()=>((st.dcPieces||0)>0||totalPiecesPlaced>0)},
+  {id:'line',icon:'&#10022;',label:'Linha',done:()=>((st.linesCleared||0)>0)},
+  {id:'city',icon:'&#9733;',label:'Cidade',done:()=>((st.citiesCompleted||0)>0)},
+  {id:'feedback',icon:'?',label:'Feedback',done:()=>{try{return localStorage.getItem('bbr2_beta_feedback_clicked')==='1';}catch(e){return false;}}}
+];
+let firstSessionRenderKey='';
+
+function updateFirstSessionCard(){
+  const card=document.getElementById('first-session-card');
+  const stepsEl=document.getElementById('fs-steps');
+  const countEl=document.getElementById('fs-count');
+  if(!card||!stepsEl||!countEl)return;
+  const doneCount=FIRST_SESSION_STEPS.filter(step=>step.done()).length;
+  const blocking=!!document.querySelector('#ov-settings.show,#ov-shop.show,#ov-profile.show,#ov-journey.show,#ov-team.show,#ov-daily-challenge.show,#ov-daily.show,#ov-win.show,#ov-lose.show,#ov-region-quiz.show,#ov-tutorial.active');
+  const hide=doneCount>=FIRST_SESSION_STEPS.length||(st.citiesCompleted||0)>0||blocking||rankingVisible;
+  const renderKey=[doneCount,hide,score,fase].join('|');
+  if(renderKey===firstSessionRenderKey)return;
+  firstSessionRenderKey=renderKey;
+  if(hide){
+    card.classList.remove('show');
+    return;
+  }
+  countEl.textContent=doneCount+'/'+FIRST_SESSION_STEPS.length;
+  stepsEl.innerHTML=FIRST_SESSION_STEPS.map(step=>{
+    const done=step.done();
+    return '<div class="fs-step'+(done?' done':'')+'"><div class="fs-step-icon">'+(done?'&#10003;':step.icon)+'</div><div class="fs-step-label">'+step.label+'</div></div>';
+  }).join('');
+  card.classList.add('show');
+}
+
 function openBetaFeedback(){
+  try{localStorage.setItem('bbr2_beta_feedback_clicked','1');}catch(e){}
+  updateFirstSessionCard();
   const city=CITIES[Math.min(fase,CITIES.length-1)]||CITIES[0];
   const title=encodeURIComponent('Feedback beta - Bloco BR');
   const body=encodeURIComponent([
@@ -5361,6 +5415,7 @@ function loop(ts){
   if(ts-_lastDrawTime<14) return; // skip se menos de ~14ms (>70fps)
   _lastDrawTime=ts;
   draw(ts);
+  updateFirstSessionCard();
 }
 initGame();
 requestAnimationFrame(loop);
