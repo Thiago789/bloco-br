@@ -34,6 +34,8 @@ function validateHtml(html) {
   ok('HTML tem guia de primeira sessao', html.includes('id="first-session-card"'));
   ok('HTML tem passos da primeira sessao', html.includes('FIRST_SESSION_STEPS'));
   ok('HTML atualiza guia de primeira sessao', html.includes('function updateFirstSessionCard()'));
+  ok('Quiz regional tem recompensa dinamica', html.includes('function regionalQuizReward()'));
+  ok('Quiz regional escala por estrelas', html.includes('stars>=3?2:1') && html.includes('Bônus cultural perfeito'));
   validateMobileContracts(html);
 
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(match => match[1]).join('\n');

@@ -1602,6 +1602,17 @@ function getQuizForCity(cityIdx){
   const pool=REGIONAL_QUIZ.filter(q=>q.city===cityIdx);
   return pool.length?pool[Math.floor(Math.random()*pool.length)]:null;
 }
+function regionalQuizReward(){
+  const city=CITIES[Math.min(fase,CITIES.length-1)];
+  const stars=missionStarRating(city);
+  return {
+    stars,
+    coins:40+(stars-1)*20,
+    xp:80+(stars-1)*30,
+    hints:stars>=3?2:1,
+    label:stars>=3?'Bônus cultural perfeito':stars===2?'Bônus cultural forte':'Bônus cultural'
+  };
+}
 function prepareRegionQuiz(cityIdx){
   activeRegionQuiz=getQuizForCity(cityIdx);
   regionQuizAnswered=false;
@@ -1610,7 +1621,8 @@ function prepareRegionQuiz(cityIdx){
   if(btn){
     btn.style.display=activeRegionQuiz?'block':'none';
     btn.disabled=false;
-    btn.textContent='Bônus cultural da cidade';
+    const reward=regionalQuizReward();
+    btn.textContent='Bônus cultural: +'+reward.coins+' moedas';
   }
 }
 function prepareQuizRescue(cityIdx){
@@ -1630,9 +1642,10 @@ function openRegionQuiz(){
   document.getElementById('rq-city').textContent=city.icon+' '+city.name;
   document.getElementById('rq-question').textContent=activeRegionQuiz.q;
   document.getElementById('rq-result').textContent='';
+  const reward=regionalQuizReward();
   document.getElementById('rq-reward').textContent=regionQuizMode==='rescue'
     ?'Acertou: recupera 1 vida e volta para o jogo'
-    :'Acertou: +40 moedas, +80 XP e +1 dica';
+    :'Acertou: +'+reward.coins+' moedas, +'+reward.xp+' XP e +'+reward.hints+' dica'+(reward.hints>1?'s':'');
   const opts=document.getElementById('rq-options');
   opts.innerHTML='';
   activeRegionQuiz.opts.forEach((label,idx)=>{
@@ -1676,12 +1689,13 @@ function answerRegionQuiz(idx){
         setTimeout(()=>{ if(settings.music && !musicPlaying) startMusic(); }, 400);
       },1200);
     } else {
-      coins+=40; xp+=80; boosters.hint=(boosters.hint||0)+1;
+      const reward=regionalQuizReward();
+      coins+=reward.coins; xp+=reward.xp; boosters.hint=(boosters.hint||0)+reward.hints;
       while(xp>=xpNext){xp-=xpNext;level++;xpNext=Math.floor(xpNext*1.3);st.level=level;}
       saveData();
       document.getElementById('rq-result').textContent='Acertou! '+activeRegionQuiz.why;
-      floatCoin(VW/2,VH/2,'+40🪙  +1💡');
-      toast('Bônus regional: +40 moedas, +80 XP e +1 dica','#F4C430');
+      floatCoin(VW/2,VH/2,'+'+reward.coins+'🪙  +'+reward.hints+'💡');
+      toast(reward.label+': +'+reward.coins+' moedas','#F4C430');
       soundQuizCorrect();
     }
   } else {
