@@ -28,6 +28,9 @@ function validateHtml(html) {
   ok('HTML aponta icone', html.includes('assets/icon.svg'));
   ok('HTML registra service worker', html.includes('serviceWorker') && html.includes('./sw.js'));
   ok('HTML tem viewport mobile', /viewport[^>]+viewport-fit=cover/i.test(html));
+  ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
+  ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
+  ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
   validateMobileContracts(html);
 
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(match => match[1]).join('\n');

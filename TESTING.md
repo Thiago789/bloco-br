@@ -15,6 +15,7 @@ https://thiago789.github.io/bloco-br/
 7. Testar o quiz regional quando aparecer.
 8. Fechar e abrir de novo para conferir se progresso/moedas continuam salvos.
 9. Usar a opcao "Adicionar a tela inicial" e abrir como app.
+10. Abrir Configuracoes e usar "Enviar feedback beta" para registrar a experiencia.
 
 ## Teste automatico antes de enviar feedback
 
@@ -50,3 +51,5 @@ Ao pedir feedback, use estas perguntas:
 5. O som funcionou depois do primeiro toque?
 6. De 0 a 10, quanta vontade deu de jogar novamente?
 7. O que voce mudaria primeiro?
+
+Tambem da para pedir que o testador use o botao "Enviar feedback beta" dentro das Configuracoes do jogo.

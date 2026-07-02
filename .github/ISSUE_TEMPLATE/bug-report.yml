@@ -1,0 +1,29 @@
+name: Bug report
+description: Informe um erro ou travamento do jogo.
+title: "Bug - "
+labels: ["bug"]
+body:
+  - type: input
+    id: device
+    attributes:
+      label: Celular e navegador
+      placeholder: "Ex.: Samsung A14 / Chrome"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para reproduzir
+      placeholder: "1. Abri o jogo...\n2. Toquei em...\n3. Aconteceu..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: O que voce esperava?
+  - type: textarea
+    id: actual
+    attributes:
+      label: O que aconteceu?
+    validations:
+      required: true

@@ -1,0 +1,37 @@
+name: Feedback beta
+description: Conte como foi testar o Bloco BR.
+title: "Feedback beta - "
+labels: ["feedback", "beta"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por testar o Bloco BR. Respostas curtas ja ajudam muito.
+  - type: input
+    id: device
+    attributes:
+      label: Celular e navegador
+      placeholder: "Ex.: Moto G / Chrome, iPhone / Safari"
+  - type: textarea
+    id: first-impression
+    attributes:
+      label: Primeira impressao
+      description: O jogo carregou bem? Voce entendeu o objetivo?
+  - type: dropdown
+    id: replay
+    attributes:
+      label: Vontade de jogar novamente
+      options:
+        - "0-3: baixa"
+        - "4-6: media"
+        - "7-8: boa"
+        - "9-10: muito alta"
+  - type: textarea
+    id: issues
+    attributes:
+      label: Problemas encontrados
+      description: Alguma tela travou, nao rolou, ficou cortada ou sem som?
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: O que voce mudaria primeiro?

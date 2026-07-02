@@ -453,6 +453,7 @@ body[data-theme] .jp-city,body[data-theme] .jp-world-pill{background:var(--theme
 .sp-action-row{padding:0 20px;margin-top:16px;display:flex;flex-direction:column;gap:8px;}
 .sp-action-btn{border:none;border-radius:12px;padding:13px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;}
 .sp-btn-danger{background:rgba(226,75,74,0.15);color:#e24b4a;border:1px solid rgba(226,75,74,0.3);}
+.sp-btn-feedback{background:rgba(58,134,255,0.15);color:#3A86FF;border:1px solid rgba(58,134,255,0.3);}
 .sp-btn-close{background:#F4C430;color:#000;}
 .sp-version{text-align:center;font-size:10px;color:rgba(245,240,232,0.2);font-weight:600;margin-top:12px;}
 body[data-theme] #settings-panel{background:var(--theme-bg);}
@@ -1105,6 +1106,7 @@ body[data-theme] #settings-panel .sp-slider{background:var(--theme-cell);}
         </div>
         <button class="toggle on" id="toggle-animations" onclick="toggleSetting('animations')"></button>
       </div>
+      <button class="sp-action-btn sp-btn-feedback" id="btn-beta-feedback" onclick="openBetaFeedback()">Enviar feedback beta</button>
     </div>
 
     <div class="sp-section">
@@ -4093,6 +4095,38 @@ function setVolume(val){
     const v = (settings.volume/100)*0.15;
     musicGain.gain.setTargetAtTime(v, AC.currentTime, 0.1);
   }
+}
+
+function openBetaFeedback(){
+  const city=CITIES[Math.min(fase,CITIES.length-1)]||CITIES[0];
+  const title=encodeURIComponent('Feedback beta - Bloco BR');
+  const body=encodeURIComponent([
+    'Obrigado por testar o Bloco BR!',
+    '',
+    'Celular/navegador:',
+    '',
+    'O jogo carregou rapido?',
+    '',
+    'Voce entendeu a primeira missao?',
+    '',
+    'Som/musica funcionou depois do primeiro toque?',
+    '',
+    'Alguma tela travou ou nao rolou?',
+    '',
+    'Nota de vontade de jogar de novo (0 a 10):',
+    '',
+    'O que voce mudaria primeiro?',
+    '',
+    'Contexto automatico:',
+    `- Cidade atual: ${city.name}`,
+    `- Fase: ${fase+1}/${CITIES.length}`,
+    `- Pontos: ${score||0}`,
+    `- Nivel: ${level||1}`,
+    `- Link: ${location.href}`
+  ].join('\n'));
+  const url=`https://github.com/Thiago789/bloco-br/issues/new?title=${title}&body=${body}`;
+  window.open(url,'_blank','noopener');
+  toast('Abrindo feedback no GitHub','#3A86FF');
 }
 
 // Temas

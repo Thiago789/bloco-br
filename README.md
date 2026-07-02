@@ -38,6 +38,8 @@ No GitHub Actions, o smoke test roda automaticamente sem `--insecure`.
 
 O smoke test cobre arquivos PWA, sintaxe do jogo, manifest, service worker, link publicado, tamanho minimo de toque e rolagem dos paineis Perfil, Configuracoes e Jornada.
 
+Feedback beta pode ser enviado pelo botao dentro de Configuracoes ou pela aba Issues do GitHub.
+
 ## Publicar no GitHub Pages
 
 1. Crie um repositório no GitHub, por exemplo `bloco-br`.
