@@ -28,6 +28,7 @@ function validateHtml(html) {
   ok('HTML aponta icone', html.includes('assets/icon.svg'));
   ok('HTML registra service worker', html.includes('serviceWorker') && html.includes('./sw.js'));
   ok('HTML tem viewport mobile', /viewport[^>]+viewport-fit=cover/i.test(html));
+  validateMobileContracts(html);
 
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(match => match[1]).join('\n');
   try {
@@ -36,6 +37,42 @@ function validateHtml(html) {
   } catch (error) {
     ok('JavaScript inline compila', false, error.message);
   }
+}
+
+function getCssBlock(html, selector) {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = html.match(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`, 'i'));
+  return match?.[1] || '';
+}
+
+function hasCssValue(block, property, expectedPattern) {
+  return new RegExp(`${property}\\s*:\\s*${expectedPattern}`, 'i').test(block);
+}
+
+function cssSize(block, property) {
+  const match = block.match(new RegExp(`${property}\\s*:\\s*(\\d+)px`, 'i'));
+  return match ? Number(match[1]) : 0;
+}
+
+function validateMobileContracts(html) {
+  [
+    ['settings', '#btn-settings-float', '#ov-settings', '#settings-panel', 'openSettings()'],
+    ['profile', '#btn-profile-float', '#ov-profile', '#profile-panel', 'openProfile()'],
+    ['journey', '#btn-map-float', '#ov-journey', '#journey-panel', 'openJourney()'],
+  ].forEach(([name, button, overlay, panel, opener]) => {
+    ok(`${name}: botao existe`, html.includes(`id="${button.slice(1)}"`));
+    ok(`${name}: overlay existe`, html.includes(`id="${overlay.slice(1)}"`));
+    ok(`${name}: painel existe`, html.includes(`id="${panel.slice(1)}"`));
+    ok(`${name}: funcao de abertura existe`, html.includes(`function ${opener.replace('()', '')}`));
+
+    const buttonCss = getCssBlock(html, button);
+    const panelCss = getCssBlock(html, panel);
+    ok(`${name}: botao usa touch-action`, hasCssValue(buttonCss, 'touch-action', 'manipulation'));
+    ok(`${name}: alvo de toque >=34px`, cssSize(buttonCss, 'width') >= 34 && cssSize(buttonCss, 'height') >= 34);
+    ok(`${name}: painel rola verticalmente`, hasCssValue(panelCss, 'overflow-y', 'auto'));
+    ok(`${name}: painel respeita altura mobile`, panelCss.includes('100dvh') || hasCssValue(panelCss, 'max-height', '90vh'));
+    ok(`${name}: painel permite pan-y`, hasCssValue(panelCss, 'touch-action', 'pan-y'));
+  });
 }
 
 function validateManifest(manifestText) {

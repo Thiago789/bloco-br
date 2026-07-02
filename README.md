@@ -36,6 +36,8 @@ node scripts/smoke-test.mjs --url "https://thiago789.github.io/bloco-br/" --inse
 
 No GitHub Actions, o smoke test roda automaticamente sem `--insecure`.
 
+O smoke test cobre arquivos PWA, sintaxe do jogo, manifest, service worker, link publicado, tamanho minimo de toque e rolagem dos paineis Perfil, Configuracoes e Jornada.
+
 ## Publicar no GitHub Pages
 
 1. Crie um repositório no GitHub, por exemplo `bloco-br`.
