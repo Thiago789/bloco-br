@@ -16,6 +16,20 @@ https://thiago789.github.io/bloco-br/
 8. Fechar e abrir de novo para conferir se progresso/moedas continuam salvos.
 9. Usar a opcao "Adicionar a tela inicial" e abrir como app.
 
+## Teste automatico antes de enviar feedback
+
+No computador, dentro da pasta do projeto:
+
+```powershell
+node scripts/smoke-test.mjs
+```
+
+Para validar o site publicado:
+
+```powershell
+node scripts/smoke-test.mjs --url "https://thiago789.github.io/bloco-br/" --insecure
+```
+
 ## O que observar
 
 - Algum botao ficou escondido ou dificil de tocar?

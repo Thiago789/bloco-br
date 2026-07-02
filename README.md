@@ -20,6 +20,22 @@ Depois acesse:
 http://127.0.0.1:8797/
 ```
 
+## Testes automáticos
+
+Antes de publicar, rode:
+
+```powershell
+node scripts/smoke-test.mjs
+```
+
+Para testar o link publicado no Windows, caso o Node reclame de certificado local:
+
+```powershell
+node scripts/smoke-test.mjs --url "https://thiago789.github.io/bloco-br/" --insecure
+```
+
+No GitHub Actions, o smoke test roda automaticamente sem `--insecure`.
+
 ## Publicar no GitHub Pages
 
 1. Crie um repositório no GitHub, por exemplo `bloco-br`.
