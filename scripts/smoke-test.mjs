@@ -31,6 +31,8 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
+  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.0.4-beta'"));
+  ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem guia de primeira sessao', html.includes('id="first-session-card"'));
   ok('HTML tem passos da primeira sessao', html.includes('FIRST_SESSION_STEPS'));
   ok('HTML atualiza guia de primeira sessao', html.includes('function updateFirstSessionCard()'));

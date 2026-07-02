@@ -1172,7 +1172,7 @@ body[data-theme] #settings-panel .sp-slider{background:var(--theme-cell);}
     <div class="sp-action-row">
       <button class="sp-action-btn sp-btn-danger" onclick="confirmResetProgress()">🗑️ Resetar progresso</button>
       <button class="sp-action-btn sp-btn-close" onclick="closeSettings()">Fechar</button>
-      <div class="sp-version">Bloco BR v1.0.0 · Desenvolvido com ❤️ no Brasil 🇧🇷</div>
+      <div class="sp-version" id="app-version-label"></div>
     </div>
   </div>
 </div>
@@ -1421,6 +1421,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
+const APP_VERSION='1.0.4-beta';
 
 let scaleX=1,scaleY=1;
 function resizeCanvas(){
@@ -2934,6 +2935,7 @@ function initGame(){
   loadPlayerName();
   loadShopData();
   loadDailyChallenge();
+  renderAppVersion();
   st.level=level;
   setTimeout(showBanner, 12000);
   setTimeout(()=>{startTutorial();checkDailyReward();}, 800);
@@ -4163,9 +4165,15 @@ function updateFirstSessionCard(){
   card.classList.add('show');
 }
 
+function renderAppVersion(){
+  const el=document.getElementById('app-version-label');
+  if(el)el.textContent='Bloco BR v'+APP_VERSION+' · Beta público';
+}
+
 function openBetaFeedback(){
   try{localStorage.setItem('bbr2_beta_feedback_clicked','1');}catch(e){}
   updateFirstSessionCard();
+  renderAppVersion();
   const city=CITIES[Math.min(fase,CITIES.length-1)]||CITIES[0];
   const title=encodeURIComponent('Feedback beta - Bloco BR');
   const body=encodeURIComponent([
@@ -4186,6 +4194,7 @@ function openBetaFeedback(){
     'O que voce mudaria primeiro?',
     '',
     'Contexto automatico:',
+    `- Versao: ${APP_VERSION}`,
     `- Cidade atual: ${city.name}`,
     `- Fase: ${fase+1}/${CITIES.length}`,
     `- Pontos: ${score||0}`,
@@ -4256,6 +4265,7 @@ function confirmResetProgress(){
 function openSettings(){
   hideBanner();
   closeJourney();
+  renderAppVersion();
   document.getElementById('ov-settings').classList.add('show');
   applySettings();
   soundBooster();
