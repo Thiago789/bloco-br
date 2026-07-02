@@ -108,6 +108,8 @@ function validateServiceWorker(swText) {
   ok('Service worker cacheia index', swText.includes('./index.html'));
   ok('Service worker cacheia manifest', swText.includes('./manifest.webmanifest'));
   ok('Service worker cacheia icone', swText.includes('./assets/icon.svg'));
+  ok('Service worker usa rede primeiro no HTML', swText.includes('wantsHtml') && swText.includes('fetch(event.request)'));
+  ok('Service worker mantem fallback offline', swText.includes("caches.match('./index.html')"));
 }
 
 async function fetchText(url, retries = 4) {
