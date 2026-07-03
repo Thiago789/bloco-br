@@ -1128,6 +1128,7 @@ body[data-theme] #settings-panel .sp-slider{background:var(--theme-cell);}
         <button class="toggle on" id="toggle-animations" onclick="toggleSetting('animations')"></button>
       </div>
       <button class="sp-action-btn sp-btn-feedback" id="btn-beta-feedback" onclick="openBetaFeedback()">Enviar feedback beta</button>
+      <button class="sp-action-btn sp-btn-feedback" id="btn-copy-diagnostics" onclick="copyBetaDiagnostics()">Copiar dados beta</button>
     </div>
 
     <div class="sp-section">
@@ -1421,7 +1422,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.0.4-beta';
+const APP_VERSION='1.0.5-beta';
 
 let scaleX=1,scaleY=1;
 function resizeCanvas(){
@@ -4204,6 +4205,40 @@ function openBetaFeedback(){
   const url=`https://github.com/Thiago789/bloco-br/issues/new?title=${title}&body=${body}`;
   window.open(url,'_blank','noopener');
   toast('Abrindo feedback no GitHub','#3A86FF');
+}
+
+function betaDiagnosticsText(){
+  const city=CITIES[Math.min(fase,CITIES.length-1)]||CITIES[0];
+  return [
+    'Bloco BR - diagnostico beta',
+    `Versao: ${APP_VERSION}`,
+    `Cidade atual: ${city.name}`,
+    `Fase: ${fase+1}/${CITIES.length}`,
+    `Pontos: ${score||0}`,
+    `Nivel: ${level||1}`,
+    `Moedas: ${coins||0}`,
+    `Tema: ${settings.theme||'dark'}`,
+    `Musica: ${settings.music?'on':'off'}`,
+    `Sons: ${settings.sound?'on':'off'}`,
+    `Tela: ${window.innerWidth}x${window.innerHeight}`,
+    `Navegador: ${navigator.userAgent}`,
+    `Link: ${location.href}`
+  ].join('\n');
+}
+
+async function copyBetaDiagnostics(){
+  const text=betaDiagnosticsText();
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+      toast('Dados beta copiados','#3A86FF');
+    }else{
+      throw new Error('clipboard unavailable');
+    }
+  }catch(e){
+    try{ window.prompt('Copie os dados beta:',text); }catch(_){}
+    toast('Dados beta prontos para copiar','#3A86FF');
+  }
 }
 
 // Temas
