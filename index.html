@@ -1290,7 +1290,7 @@ function getShapePool(){
 }
 const CITIES=[
   // MUNDO 1 — Nordeste (introdução suave)
-  {name:'Fortaleza - CE',icon:'🏖️',desc:'Calçadão de Iracema',goal:'linhas',target:2,bonus:50},
+  {name:'Fortaleza - CE',icon:'🏖️',desc:'Calçadão de Iracema',goal:'linhas',target:1,bonus:50},
   {name:'Recife - PE',icon:'🌉',desc:'Pontes históricas',goal:'score',target:420,bonus:70},
   {name:'Salvador - BA',icon:'🥁',desc:'Palco do Carnaval',goal:'combo',target:2,bonus:90},
   {name:'Natal - RN',icon:'🌊',desc:'Dunas de Genipabu',goal:'pecas',target:14,bonus:100},
@@ -1422,7 +1422,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.0.5-beta';
+const APP_VERSION='1.0.6-beta';
 
 let scaleX=1,scaleY=1;
 function resizeCanvas(){
@@ -2173,13 +2173,22 @@ function drawProgress(){
 
 function objectiveLabel(city){
   if(city.goal==='score') return 'pontos';
-  if(city.goal==='pecas') return 'peças';
-  if(city.goal==='combo') return 'combos';
-  return 'linhas';
+  if(city.goal==='pecas') return city.target===1?'peça':'peças';
+  if(city.goal==='combo') return city.target===1?'combo':'combos';
+  return city.target===1?'linha/coluna':'linhas/colunas';
+}
+function objectiveAction(city){
+  if(city.goal==='score') return 'Some';
+  if(city.goal==='pecas') return 'Coloque';
+  if(city.goal==='combo') return 'Faça';
+  return 'Limpe';
 }
 function objectiveText(city, value=goal){
   const done=Math.min(city.target, Math.max(0, Math.floor(value||0)));
-  return `🎯 Meta: ${done}/${city.target} ${objectiveLabel(city)}`;
+  return `🎯 ${objectiveAction(city)} ${done}/${city.target} ${objectiveLabel(city)}`;
+}
+function objectivePlainText(city, value=goal){
+  return objectiveText(city,value).replace('🎯 ','');
 }
 function objectiveHint(city){
   if(city.goal==='score') return 'Limpe linhas para somar pontos';
@@ -2619,7 +2628,7 @@ function checkWin(){
   document.getElementById('win-performance').textContent=performance.coins>0
     ? `${performance.label} · +${performance.coins} moedas extras`
     : performance.label;
-  document.getElementById('win-mission-summary').textContent=`${cityWinLine(fase)} ${objectiveText(city,city.target).replace('🎯 Meta: ','')} concluída.`;
+  document.getElementById('win-mission-summary').textContent=`${cityWinLine(fase)} ${objectivePlainText(city,city.target)} concluída.`;
   document.getElementById('win-coins').textContent='+'+coinBonus+'🪙';
   document.getElementById('win-xp').textContent='+'+xpBonus;
   document.getElementById('win-score').textContent=score.toLocaleString('pt-BR');
@@ -3888,7 +3897,7 @@ const TUT_STEPS=[
 function startTutorial(){
   try{ if(localStorage.getItem('bbr2_tutorial_done')) return; }catch(e){}
   try{ localStorage.setItem('bbr2_tutorial_done','1'); }catch(e){}
-  setMsg('Arraste as peças, complete a meta e avance pela cidade.','info',5200);
+  setMsg('Arraste uma peça. Limpe 1 linha ou coluna para vencer Fortaleza.','info',5200);
   setTimeout(()=>toast('Tutorial completo nas configurações, se precisar.','#3A86FF'),900);
 }
 
@@ -4358,7 +4367,7 @@ function refreshJourney(){
   const pct=Math.min(100,Math.round((goal/city.target)*100));
   document.getElementById('jp-now-icon').textContent=city.icon;
   document.getElementById('jp-now-name').textContent=city.name;
-  document.getElementById('jp-now-obj').textContent=objectiveText(city).replace('🎯 Meta: ','');
+  document.getElementById('jp-now-obj').textContent=objectivePlainText(city);
   document.getElementById('jp-progress-fill').style.width=pct+'%';
 
   const worldsEl=document.getElementById('jp-worlds');
@@ -4388,7 +4397,7 @@ function refreshJourney(){
       <div class="jp-city-icon">${completed?'✓':c.icon}</div>
       <div class="jp-city-body">
         <div class="jp-city-name">${c.name}</div>
-        <div class="jp-city-desc">${objectiveText(c,current?goal:completed?c.target:0).replace('🎯 Meta: ','')} · ${c.desc}</div>
+        <div class="jp-city-desc">${objectivePlainText(c,current?goal:completed?c.target:0)} · ${c.desc}</div>
         ${starHtml}
       </div>
       <div class="jp-city-status">${status}</div>

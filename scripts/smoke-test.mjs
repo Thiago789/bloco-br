@@ -31,13 +31,15 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
-  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.0.5-beta'"));
+  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.0.6-beta'"));
   ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem botao de diagnostico beta', html.includes('id="btn-copy-diagnostics"'));
   ok('HTML copia diagnostico beta', html.includes('function copyBetaDiagnostics()') && html.includes('function betaDiagnosticsText()'));
   ok('HTML tem guia de primeira sessao', html.includes('id="first-session-card"'));
   ok('HTML tem passos da primeira sessao', html.includes('FIRST_SESSION_STEPS'));
   ok('HTML atualiza guia de primeira sessao', html.includes('function updateFirstSessionCard()'));
+  ok('Primeira missao tem vitoria rapida', html.includes("{name:'Fortaleza - CE',icon:'🏖️',desc:'Calçadão de Iracema',goal:'linhas',target:1"));
+  ok('Objetivo usa verbo de acao', html.includes('function objectiveAction(city)') && html.includes('function objectivePlainText(city'));
   ok('Quiz regional tem recompensa dinamica', html.includes('function regionalQuizReward()'));
   ok('Quiz regional escala por estrelas', html.includes('stars>=3?2:1') && html.includes('Bônus cultural perfeito'));
   validateMobileContracts(html);
