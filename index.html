@@ -1422,7 +1422,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.0.6-beta';
+const APP_VERSION='1.0.7-beta';
 
 let scaleX=1,scaleY=1;
 function resizeCanvas(){
@@ -2494,6 +2494,7 @@ function onUp(e){
       place(drag.piece,r,c);
       pieces[drag.idx]=null;
       if(pieces.every(p=>p===null))spawnPieces();
+      maybeShowOpeningAssist();
       checkWin();checkOver();
     } else if(overGrid(x,y)){
       setMsg('Não cabe aqui!','err',1100);
@@ -2926,6 +2927,38 @@ function makeFallbackTray(pool){
     color:COLORS[(Math.floor(Math.random()*COLORS.length)+i)%COLORS.length]
   }));
 }
+function boardIsEmpty(){
+  return board.every(row=>row.every(cell=>!cell));
+}
+function shouldUseOpeningTray(){
+  return fase===0&&goal===0&&boardIsEmpty()&&(st.citiesCompleted||0)===0&&(st.linesCleared||0)===0&&(st.dcPieces||0)===0;
+}
+function openingTray(){
+  return [
+    {shape:[[1,1,1,1,1]],color:COLORS[1]},
+    {shape:[[1,1,1]],color:COLORS[0]},
+    {shape:[[1]],color:COLORS[2]}
+  ];
+}
+function maybeShowOpeningAssist(){
+  if(!settings.hints||fase!==0||goal>0||(st.citiesCompleted||0)>0||(st.linesCleared||0)>0)return;
+  if(boardIsEmpty()&&pieces[0]&&canPlace(pieces[0].shape,0,0)){
+    hintCells=[[0,0],[0,1],[0,2],[0,3],[0,4]];
+    hintPieceIdx=0;
+    updateHintSet();
+    clearTimeout(hintTimer);
+    hintTimer=setTimeout(()=>{hintCells=[];hintPieceIdx=-1;updateHintSet();},5200);
+    return;
+  }
+  const move=findBestHintMove();
+  if(!move||move.combo<=0&&st.dcPieces>0)return;
+  hintCells=[];
+  hintPieceIdx=move.idx;
+  move.piece.shape.forEach((row,dr)=>row.forEach((v,dc)=>{if(v)hintCells.push([move.r+dr,move.c+dc]);}));
+  updateHintSet();
+  clearTimeout(hintTimer);
+  hintTimer=setTimeout(()=>{hintCells=[];hintPieceIdx=-1;updateHintSet();},4200);
+}
 function initGame(){
   board=Array.from({length:N},()=>Array(N).fill(null));
   score=0;level=1;xp=0;xpNext=300;lives=3;fase=0;goal=0;
@@ -2947,6 +2980,10 @@ function initGame(){
   loadDailyChallenge();
   renderAppVersion();
   st.level=level;
+  if(shouldUseOpeningTray()){
+    pieces=openingTray();
+    maybeShowOpeningAssist();
+  }
   setTimeout(showBanner, 12000);
   setTimeout(()=>{startTutorial();checkDailyReward();}, 800);
 }
