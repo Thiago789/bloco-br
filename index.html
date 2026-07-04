@@ -1422,7 +1422,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.0.7-beta';
+const APP_VERSION='1.0.8-beta';
 
 let scaleX=1,scaleY=1;
 function resizeCanvas(){
@@ -2689,7 +2689,7 @@ function checkOver(){
     } else {
       toast(`💔 Vida perdida! ${lives} restantes...`,'#e24b4a');
     }
-    spawnPieces();
+    spawnRecoveryPieces();
   } else {
     // Preencher tela de game over reformulada (v11+)
     const isNewBest=score>=best&&score>0;
@@ -2926,6 +2926,21 @@ function makeFallbackTray(pool){
     shape:source[Math.floor(Math.random()*source.length)],
     color:COLORS[(Math.floor(Math.random()*COLORS.length)+i)%COLORS.length]
   }));
+}
+function spawnRecoveryPieces(){
+  const playable=SHAPES_EASY.filter(shape=>countMovesForShape(shape)>0);
+  const safePool=playable.length?playable:[[[1]]];
+  const tray=[
+    {shape:[[1]],color:'#F4C430'},
+    {shape:safePool[Math.floor(Math.random()*safePool.length)],color:COLORS[2]},
+    {shape:safePool[Math.floor(Math.random()*safePool.length)],color:COLORS[1]}
+  ];
+  pieces=tray.map((piece,i)=>countMovesForShape(piece.shape)>0?piece:{
+    shape:[[1]],
+    color:i===0?'#F4C430':COLORS[(i+3)%COLORS.length]
+  });
+  hintCells=[];hintPieceIdx=-1;updateHintSet();
+  setMsg('Nova chance: peças menores para respirar.','info',2200);
 }
 function boardIsEmpty(){
   return board.every(row=>row.every(cell=>!cell));
