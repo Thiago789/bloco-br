@@ -7,6 +7,8 @@ const args = process.argv.slice(2);
 const mode = args.includes('--url') ? 'remote' : 'local';
 const baseUrl = args[args.indexOf('--url') + 1]?.replace(/\/?$/, '/');
 const allowInsecureTls = args.includes('--insecure');
+const waitFresh = args.includes('--wait-fresh');
+const expectedAppVersion = readExpectedAppVersion();
 
 if (allowInsecureTls) {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -20,6 +22,11 @@ function ok(name, condition, detail = '') {
 
 function readLocal(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), 'utf8');
+}
+
+function readExpectedAppVersion() {
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  return html.match(/const APP_VERSION='([^']+)'/)?.[1] || '';
 }
 
 function validateHtml(html) {
@@ -126,7 +133,13 @@ async function fetchText(url, retries = 4) {
   let lastError;
   for (let i = 0; i < retries; i++) {
     try {
-      const response = await fetch(url, { headers: { 'user-agent': 'BlocoBR-smoke-test' } });
+      const response = await fetch(url, {
+        headers: {
+          'user-agent': 'BlocoBR-smoke-test',
+          'cache-control': 'no-cache',
+          pragma: 'no-cache',
+        },
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.text();
     } catch (error) {
@@ -135,6 +148,23 @@ async function fetchText(url, retries = 4) {
     }
   }
   throw lastError;
+}
+
+function cacheBust(url) {
+  const fresh = new URL(url);
+  fresh.searchParams.set('smoke', `${Date.now()}`);
+  return fresh;
+}
+
+async function fetchFreshHtml() {
+  let html = '';
+  const attempts = waitFresh ? 12 : 1;
+  for (let i = 0; i < attempts; i++) {
+    html = await fetchText(cacheBust(baseUrl), 2);
+    if (!waitFresh || html.includes(`const APP_VERSION='${expectedAppVersion}'`)) return html;
+    await new Promise(resolve => setTimeout(resolve, 5000));
+  }
+  return html;
 }
 
 async function runLocal() {
@@ -151,7 +181,7 @@ async function runRemote() {
     throw new Error('Use: node scripts/smoke-test.mjs --url https://exemplo/');
   }
   const [html, manifest, sw, icon] = await Promise.all([
-    fetchText(baseUrl),
+    fetchFreshHtml(),
     fetchText(new URL('manifest.webmanifest', baseUrl)),
     fetchText(new URL('sw.js', baseUrl)),
     fetchText(new URL('assets/icon.svg', baseUrl)),
