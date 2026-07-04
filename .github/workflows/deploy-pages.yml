@@ -45,7 +45,7 @@ jobs:
 
       - name: Retry GitHub Pages deploy
         id: deployment_retry
-        if: steps.deployment.outcome == 'failure'
+        if: steps.deployment.conclusion == 'failure'
         uses: actions/deploy-pages@v4
         with:
           artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
