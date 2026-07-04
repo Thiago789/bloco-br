@@ -31,7 +31,7 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
-  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.0.8-beta'"));
+  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.0.9-beta'"));
   ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem botao de diagnostico beta', html.includes('id="btn-copy-diagnostics"'));
   ok('HTML copia diagnostico beta', html.includes('function copyBetaDiagnostics()') && html.includes('function betaDiagnosticsText()'));
@@ -40,6 +40,7 @@ function validateHtml(html) {
   ok('HTML atualiza guia de primeira sessao', html.includes('function updateFirstSessionCard()'));
   ok('Primeira missao tem vitoria rapida', html.includes("{name:'Fortaleza - CE',icon:'🏖️',desc:'Calçadão de Iracema',goal:'linhas',target:1"));
   ok('Objetivo usa verbo de acao', html.includes('function objectiveAction(city)') && html.includes('function objectivePlainText(city'));
+  ok('Feedback de objetivo ajusta singular e plural', html.includes('function objectiveUnit(city') && html.includes("remaining===1?'falta':'faltam'"));
   ok('Abertura tem bandeja guiada', html.includes('function openingTray()') && html.includes('function shouldUseOpeningTray()'));
   ok('Abertura usa dica visual sem booster', html.includes('function maybeShowOpeningAssist()') && html.includes('hintTimer=setTimeout'));
   ok('Perda de vida gera bandeja de recuperacao', html.includes('function spawnRecoveryPieces()') && html.includes('Nova chance: peças menores para respirar.'));

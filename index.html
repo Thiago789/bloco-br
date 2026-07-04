@@ -1422,7 +1422,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.0.8-beta';
+const APP_VERSION='1.0.9-beta';
 
 let scaleX=1,scaleY=1;
 function resizeCanvas(){
@@ -2172,10 +2172,13 @@ function drawProgress(){
 }
 
 function objectiveLabel(city){
+  return objectiveUnit(city,city.target);
+}
+function objectiveUnit(city,count=city?.target||0){
   if(city.goal==='score') return 'pontos';
-  if(city.goal==='pecas') return city.target===1?'peça':'peças';
-  if(city.goal==='combo') return city.target===1?'combo':'combos';
-  return city.target===1?'linha/coluna':'linhas/colunas';
+  if(city.goal==='pecas') return count===1?'peça':'peças';
+  if(city.goal==='combo') return count===1?'combo':'combos';
+  return count===1?'linha/coluna':'linhas/colunas';
 }
 function objectiveAction(city){
   if(city.goal==='score') return 'Some';
@@ -2214,7 +2217,7 @@ function missionPerformanceBonus(stars){
   return {
     coins:(stars-1)*25,
     xp:stars*35,
-    label:stars>=3?'Excelente':stars===2?'Muito bom':'Concluida'
+    label:stars>=3?'Excelente':stars===2?'Muito bom':'Concluída'
   };
 }
 function renderMissionStars(stars){
@@ -2225,11 +2228,10 @@ function reportMissionProgress(city,before){
   const delta=Math.max(0,goal-before);
   if(delta<=0)return;
   const remaining=Math.max(0,city.target-goal);
-  const unit=objectiveLabel(city);
-  const deltaLabel=city.goal==='score'?`+${delta} pts`:`+${delta} ${unit}`;
+  const deltaLabel=city.goal==='score'?`+${delta} pts`:`+${delta} ${objectiveUnit(city,delta)}`;
   floatCoin(VW/2,Y_OBJ+10,deltaLabel);
   if(settings.animations)spawnFloatingText(deltaLabel,VW/2,Y_OBJ+22,'#F4C430',16);
-  if(remaining>0)setMsg(`${deltaLabel} · faltam ${remaining} ${unit}`,'ok',1400);
+  if(remaining>0)setMsg(`${deltaLabel} · ${remaining===1?'falta':'faltam'} ${remaining} ${objectiveUnit(city,remaining)}`,'ok',1400);
   else {
     setMsg('Meta completa! Missão concluída.','ok',1400);
     triggerGridShake(7);
@@ -2244,7 +2246,7 @@ function showAlmostThere(city){
   const remaining=Math.max(0,city.target-goal);
   if(remaining===1&&!missionCloseToastShown){
     missionCloseToastShown=true;
-    toast(`Quase lá: falta 1 ${objectiveLabel(city).replace('peças','peça').replace('pontos','ponto')}!`,'#F4C430');
+    toast(`Quase lá: falta 1 ${objectiveUnit(city,1).replace('pontos','ponto')}!`,'#F4C430');
   }
 }
 
