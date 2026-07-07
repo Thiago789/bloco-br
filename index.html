@@ -1422,7 +1422,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.0.9-beta';
+const APP_VERSION='1.1.0-beta';
 
 let scaleX=1,scaleY=1;
 function resizeCanvas(){
@@ -2199,6 +2199,12 @@ function objectiveHint(city){
   if(city.goal==='combo') return 'Busque limpar 2+ linhas de uma vez';
   return 'Complete linhas ou colunas';
 }
+function missionStartMessage(city){
+  if(city.goal==='score') return `${city.name.split(' - ')[0]}: limpe linhas para somar ${city.target} pontos. Combos aceleram.`;
+  if(city.goal==='combo') return `${city.name.split(' - ')[0]}: limpe 2+ linhas de uma vez para fazer combos.`;
+  if(city.goal==='pecas') return `${city.name.split(' - ')[0]}: coloque ${city.target} peças com calma e segurança.`;
+  return `${city.name.split(' - ')[0]}: limpe ${city.target} ${objectiveUnit(city,city.target)} para avançar.`;
+}
 function missionProgressRatio(city){
   return Math.max(0,Math.min(1,(goal||0)/(city?.target||1)));
 }
@@ -2819,7 +2825,7 @@ document.getElementById('btn-next').addEventListener('click',()=>{
   st.boostersUsedThisMission=0;st.missionNoBoosters=true;st.missionCompleted=false;
   spawnPieces();
   changeMusicTheme(fase);
-  showCityTransition(fromFase,fase,CITIES[fromFase].bonus,()=>setMsg('Nova missão! Boa sorte 🇧🇷','info',2000));
+  showCityTransition(fromFase,fase,CITIES[fromFase].bonus,()=>setMsg(missionStartMessage(CITIES[fase]),'info',3600));
   saveData();
 });
 document.getElementById('btn-rewarded').addEventListener('click',()=>{
