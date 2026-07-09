@@ -1422,7 +1422,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.1.5-beta';
+const APP_VERSION='1.1.6-beta';
 
 let scaleX=1,scaleY=1;
 function resizeCanvas(){
@@ -2200,12 +2200,17 @@ function drawGrid(){
     ctx.strokeStyle=`rgba(226,75,74,${0.3+Math.sin(now()*0.004)*0.2})`;
     ctx.lineWidth=2;rr(sgx-5,sgy-5,GRID_SZ+10,GRID_SZ+10,13);ctx.stroke();
   }
-  let previewShape=null,previewR=0,previewC=0,previewCanPlace=false,previewClearSet=new Set();
+  let previewShape=null,previewR=0,previewC=0,previewCanPlace=false,previewClearSet=new Set(),previewClearGain=0,previewClearCombos=0;
   if(drag&&anchor){
     const{r:ar,c:ac}=anchor,sh=drag.piece.shape;
     if(ar>=0&&ac>=0&&ar+sh.length<=N&&ac+sh[0].length<=N){
       previewShape=sh;previewR=ar;previewC=ac;previewCanPlace=canPlace(sh,ar,ac);
-      if(previewCanPlace)previewClearSet=previewCompletionCells(sh,ar,ac);
+      if(previewCanPlace){
+        const previewStats=previewCompletionStats(sh,ar,ac);
+        previewClearSet=previewStats.cells;
+        previewClearGain=previewStats.gain;
+        previewClearCombos=previewStats.combos;
+      }
     }
   }
   for(let r=0;r<N;r++){
@@ -2266,6 +2271,17 @@ function drawGrid(){
         rr(x+1,y+1,s-2,s-2,Math.max(1,s*0.1));ctx.stroke();
       }
     }
+  }
+  if(previewClearGain>0){
+    const label=previewClearCombos>1?`Combo x${previewClearCombos}  +${previewClearGain} pts`:`+${previewClearGain} pts`;
+    const w=Math.min(190,Math.max(78,label.length*7.4));
+    const x=VW/2-w/2,y=Y_GRID-20;
+    ctx.save();
+    ctx.globalAlpha=0.9;
+    ctx.fillStyle='rgba(10,18,30,0.82)';rr(x,y,w,22,11);ctx.fill();
+    ctx.strokeStyle=hexToRgba(accent,0.62);ctx.lineWidth=1.2;rr(x,y,w,22,11);ctx.stroke();
+    txt(label,VW/2,y+11,11,accent,'center','Baloo 2');
+    ctx.restore();
   }
 }
 
@@ -2707,6 +2723,16 @@ function previewCompletionCells(shape,r,c){
   for(let rr0=0;rr0<N;rr0++)if(next[rr0].every(v=>v))for(let cc=0;cc<N;cc++)cells.add(rr0*N+cc);
   for(let cc=0;cc<N;cc++)if(next.every(row=>row[cc]))for(let rr0=0;rr0<N;rr0++)cells.add(rr0*N+cc);
   return cells;
+}
+function previewCompletionStats(shape,r,c){
+  const cells=previewCompletionCells(shape,r,c);
+  const next=board.map(row=>row.slice());
+  shape.forEach((row,dr)=>row.forEach((v,dc)=>{if(v)next[r+dr][c+dc]=true;}));
+  let combos=0;
+  for(let rr0=0;rr0<N;rr0++)if(next[rr0].every(v=>v))combos++;
+  for(let cc=0;cc<N;cc++)if(next.every(row=>row[cc]))combos++;
+  const gain=combos>0?combos*10+cells.size+(combos>1?combos*20:0):0;
+  return {cells,combos,gain};
 }
 function place(piece,r,c){
   piece.shape.forEach((row,dr)=>row.forEach((v,dc)=>{if(v)board[r+dr][c+dc]=piece.color;}));
