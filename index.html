@@ -1422,7 +1422,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.1.0-beta';
+const APP_VERSION='1.1.1-beta';
 
 let scaleX=1,scaleY=1;
 function resizeCanvas(){
@@ -1783,6 +1783,71 @@ function rr(x,y,w,h,r){
 }
 // Cache de offscreen canvas por tamanho de bloco — elimina recriar gradientes
 const _blockCache = new Map();
+function hexToRgb(hex){
+  const m=String(hex||'').replace('#','').match(/^([0-9a-f]{6})$/i);
+  if(!m)return null;
+  const n=parseInt(m[1],16);
+  return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};
+}
+function blockMotifIndex(color){
+  let best=0,bestDist=Infinity;
+  COLORS.forEach((c,i)=>{
+    const a=hexToRgb(color),b=hexToRgb(c);
+    if(!a||!b)return;
+    const d=Math.abs(a.r-b.r)+Math.abs(a.g-b.g)+Math.abs(a.b-b.b);
+    if(d<bestDist){best=i;bestDist=d;}
+  });
+  return best;
+}
+function drawBlockMotif(c,s,color){
+  if(s<18)return;
+  const i=blockMotifIndex(color)%7;
+  c.save();
+  c.globalAlpha=0.18;
+  c.strokeStyle='rgba(255,255,255,0.95)';
+  c.fillStyle='rgba(255,255,255,0.85)';
+  c.lineWidth=Math.max(1.2,s*0.055);
+  c.lineCap='round';
+  c.lineJoin='round';
+  if(i===0){
+    c.beginPath();
+    for(let p=0;p<5;p++){
+      const a=-Math.PI/2+p*Math.PI*2/5;
+      const x=s/2+Math.cos(a)*s*0.22,y=s/2+Math.sin(a)*s*0.22;
+      p?c.lineTo(x,y):c.moveTo(x,y);
+      const a2=a+Math.PI/5;
+      c.lineTo(s/2+Math.cos(a2)*s*0.09,s/2+Math.sin(a2)*s*0.09);
+    }
+    c.closePath();c.stroke();
+  } else if(i===1){
+    c.beginPath();
+    c.arc(s*0.5,s*0.5,s*0.17,0,Math.PI*2);c.stroke();
+    for(let p=0;p<8;p++){
+      const a=p*Math.PI/4;
+      c.beginPath();c.moveTo(s/2+Math.cos(a)*s*0.24,s/2+Math.sin(a)*s*0.24);
+      c.lineTo(s/2+Math.cos(a)*s*0.34,s/2+Math.sin(a)*s*0.34);c.stroke();
+    }
+  } else if(i===2){
+    for(let p=0;p<2;p++){
+      const y=s*(0.42+p*0.17);
+      c.beginPath();c.moveTo(s*0.24,y);
+      c.quadraticCurveTo(s*0.38,y-s*0.12,s*0.52,y);
+      c.quadraticCurveTo(s*0.66,y+s*0.12,s*0.80,y);c.stroke();
+    }
+  } else if(i===3){
+    c.beginPath();c.moveTo(s*0.5,s*0.22);c.lineTo(s*0.76,s*0.5);c.lineTo(s*0.5,s*0.78);c.lineTo(s*0.24,s*0.5);c.closePath();c.stroke();
+  } else if(i===4){
+    c.beginPath();c.ellipse(s*0.5,s*0.5,s*0.16,s*0.29,Math.PI/4,0,Math.PI*2);c.stroke();
+    c.beginPath();c.moveTo(s*0.35,s*0.65);c.lineTo(s*0.68,s*0.32);c.stroke();
+  } else if(i===5){
+    c.beginPath();c.moveTo(s*0.26,s*0.62);c.quadraticCurveTo(s*0.50,s*0.28,s*0.74,s*0.62);c.stroke();
+    c.beginPath();c.moveTo(s*0.36,s*0.62);c.lineTo(s*0.64,s*0.62);c.stroke();
+  } else {
+    c.beginPath();c.arc(s*0.5,s*0.5,s*0.06,0,Math.PI*2);c.fill();
+    c.beginPath();c.arc(s*0.5,s*0.5,s*0.22,0,Math.PI*2);c.stroke();
+  }
+  c.restore();
+}
 function getBlockCanvas(s, color){
   const key = s+'|'+color;
   if(_blockCache.has(key)) return _blockCache.get(key);
@@ -1821,6 +1886,7 @@ function getBlockCanvas(s, color){
     oc_ctx.arc(s*0.25,s*0.22,s*0.08,0,Math.PI*2);
     oc_ctx.fill();
   }
+  drawBlockMotif(oc_ctx,s,color);
   // Limitar cache a 80 entradas (7 cores × ~10 tamanhos)
   if(_blockCache.size > 80) _blockCache.clear();
   _blockCache.set(key, oc);
