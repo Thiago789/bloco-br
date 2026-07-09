@@ -1422,7 +1422,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.1.3-beta';
+const APP_VERSION='1.1.4-beta';
 
 let scaleX=1,scaleY=1;
 function resizeCanvas(){
@@ -1801,14 +1801,17 @@ function blockMotifIndex(color){
   });
   return best;
 }
-function drawBlockMotif(c,s,color){
+function drawBlockMotif(c,s,color,phase=0){
   if(s<18)return;
   const i=blockMotifIndex(color)%7;
+  const pulse=0.5+Math.sin(phase+i*0.9)*0.5;
   c.save();
-  c.globalAlpha=0.18;
-  c.strokeStyle='rgba(255,255,255,0.95)';
-  c.fillStyle='rgba(255,255,255,0.85)';
-  c.lineWidth=Math.max(1.2,s*0.055);
+  c.globalAlpha=0.62+pulse*0.24;
+  c.shadowColor='rgba(255,255,255,0.7)';
+  c.shadowBlur=s*0.08+pulse*s*0.05;
+  c.strokeStyle='rgba(255,255,255,0.98)';
+  c.fillStyle='rgba(244,196,48,0.92)';
+  c.lineWidth=Math.max(1.6,s*0.07);
   c.lineCap='round';
   c.lineJoin='round';
   if(i===0){
@@ -1850,6 +1853,13 @@ function drawBlockMotif(c,s,color){
   }
   c.restore();
 }
+function drawBlockMotifAt(c,x,y,s,color){
+  if(!settings.animations&&s<24)return;
+  c.save();
+  c.translate(x,y);
+  drawBlockMotif(c,s,color,now()*0.004);
+  c.restore();
+}
 function getBlockCanvas(s, color){
   const key = s+'|'+color;
   if(_blockCache.has(key)) return _blockCache.get(key);
@@ -1888,7 +1898,6 @@ function getBlockCanvas(s, color){
     oc_ctx.arc(s*0.25,s*0.22,s*0.08,0,Math.PI*2);
     oc_ctx.fill();
   }
-  drawBlockMotif(oc_ctx,s,color);
   // Limitar cache a 80 entradas (7 cores × ~10 tamanhos)
   if(_blockCache.size > 80) _blockCache.clear();
   _blockCache.set(key, oc);
@@ -1907,6 +1916,7 @@ function block(x,y,s,color,alpha=1,glow=false){
   try{
     const cached = getBlockCanvas(Math.round(s), color);
     ctx.drawImage(cached, x, y, s, s);
+    drawBlockMotifAt(ctx,x,y,s,color);
   }catch(e){
     // Fallback simples se roundRect não suportado
     ctx.fillStyle=color;
@@ -2203,6 +2213,7 @@ function drawGrid(){
           const dx=(s-ds)/2;
           ctx.globalAlpha=0.72+0.28*p;
           ctx.drawImage(getBlockCanvas(Math.round(s),board[r][c]),x+dx,y+dy+dx,ds,ds);
+          drawBlockMotifAt(ctx,x+dx,y+dy+dx,ds,board[r][c]);
           ctx.globalAlpha=(1-p)*0.55;
           ctx.strokeStyle=hexToRgba(board[r][c],0.95);
           ctx.lineWidth=2;
@@ -2424,7 +2435,11 @@ function drawDrag(){
   ctx.shadowColor='rgba(0,0,0,0.55)';ctx.shadowBlur=12;
   ctx.globalAlpha=0.94;
   shape.forEach((row,dr)=>row.forEach((v,dc)=>{
-    if(v) ctx.drawImage(getBlockCanvas(Math.round(cs),color),ox+dc*(cs+3),oy+dr*(cs+3),cs,cs);
+    if(v){
+      const bx=ox+dc*(cs+3),by=oy+dr*(cs+3);
+      ctx.drawImage(getBlockCanvas(Math.round(cs),color),bx,by,cs,cs);
+      drawBlockMotifAt(ctx,bx,by,cs,color);
+    }
   }));
   ctx.shadowBlur=0;ctx.globalAlpha=1;
 }
