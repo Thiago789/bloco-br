@@ -1422,7 +1422,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.1.6-beta';
+const APP_VERSION='1.1.7-beta';
 
 let scaleX=1,scaleY=1;
 function resizeCanvas(){
@@ -2580,8 +2580,14 @@ function rotateTrayPiece(idx){
   piece.shape=rotateShape(piece.shape);
   hintCells=[];hintPieceIdx=-1;updateHintSet();
   soundPickup();
+  const clearingMove=bestClearingMoveForShape(piece.shape);
+  if(clearingMove){
+    hintCells=[...clearingMove.cells].map(cell=>([Math.floor(cell/N),cell%N]));
+    hintPieceIdx=idx;updateHintSet();
+    setMsg(clearingMove.combos>1?`Giro abriu Combo x${clearingMove.combos}!`:`Giro abriu +${clearingMove.gain} pts!`,'ok',1200);
+  }
   if(settings.animations)spawnStars(4,PAD+idx*(SLOT_W+GAP)+SLOT_W/2,Y_TRAY+SLOT_W/2);
-  if(now()-lastRotateHint>5000){
+  if(!clearingMove&&now()-lastRotateHint>5000){
     setMsg('PeÃ§a girada!','info',900);
     lastRotateHint=now();
   }
@@ -2733,6 +2739,15 @@ function previewCompletionStats(shape,r,c){
   for(let cc=0;cc<N;cc++)if(next.every(row=>row[cc]))combos++;
   const gain=combos>0?combos*10+cells.size+(combos>1?combos*20:0):0;
   return {cells,combos,gain};
+}
+function bestClearingMoveForShape(shape){
+  let best=null;
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    if(!canPlace(shape,r,c))continue;
+    const stats=previewCompletionStats(shape,r,c);
+    if(stats.gain>0&&(!best||stats.gain>best.gain))best={r,c,...stats};
+  }
+  return best;
 }
 function place(piece,r,c){
   piece.shape.forEach((row,dr)=>row.forEach((v,dc)=>{if(v)board[r+dr][c+dc]=piece.color;}));
