@@ -1422,7 +1422,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.1.4-beta';
+const APP_VERSION='1.1.5-beta';
 
 let scaleX=1,scaleY=1;
 function resizeCanvas(){
@@ -1860,6 +1860,20 @@ function drawBlockMotifAt(c,x,y,s,color){
   drawBlockMotif(c,s,color,now()*0.004);
   c.restore();
 }
+function drawPreviewClearGlow(x,y,s,color='#F4C430'){
+  const pulse=0.55+Math.sin(now()*0.009)*0.25;
+  ctx.save();
+  ctx.globalAlpha=0.55+pulse*0.25;
+  ctx.shadowColor=color;
+  ctx.shadowBlur=s*0.45;
+  ctx.strokeStyle=color;
+  ctx.lineWidth=Math.max(2,s*0.09);
+  rr(x-2,y-2,s+4,s+4,Math.max(3,s*0.2));ctx.stroke();
+  ctx.globalAlpha=0.16+pulse*0.08;
+  ctx.fillStyle=color;
+  rr(x,y,s,s,Math.max(2,s*0.16));ctx.fill();
+  ctx.restore();
+}
 function getBlockCanvas(s, color){
   const key = s+'|'+color;
   if(_blockCache.has(key)) return _blockCache.get(key);
@@ -2186,22 +2200,31 @@ function drawGrid(){
     ctx.strokeStyle=`rgba(226,75,74,${0.3+Math.sin(now()*0.004)*0.2})`;
     ctx.lineWidth=2;rr(sgx-5,sgy-5,GRID_SZ+10,GRID_SZ+10,13);ctx.stroke();
   }
+  let previewShape=null,previewR=0,previewC=0,previewCanPlace=false,previewClearSet=new Set();
+  if(drag&&anchor){
+    const{r:ar,c:ac}=anchor,sh=drag.piece.shape;
+    if(ar>=0&&ac>=0&&ar+sh.length<=N&&ac+sh[0].length<=N){
+      previewShape=sh;previewR=ar;previewC=ac;previewCanPlace=canPlace(sh,ar,ac);
+      if(previewCanPlace)previewClearSet=previewCompletionCells(sh,ar,ac);
+    }
+  }
   for(let r=0;r<N;r++){
     for(let c=0;c<N;c++){
       const x=GX+c*CELL+1,y=Y_GRID+r*CELL+1,s=CELL-2;
       const isHint=_hintSet.has(r*N+c);
       let previewColor=null,previewOk=false;
-      if(drag&&anchor){
-        const{r:ar,c:ac}=anchor,sh=drag.piece.shape;
+      if(previewShape){
+        const ar=previewR,ac=previewC,sh=previewShape;
         // Só mostra preview se anchor está dentro do grid
         if(ar>=0&&ac>=0&&ar+sh.length<=N&&ac+sh[0].length<=N){
           for(let dr=0;dr<sh.length;dr++)
             for(let dc=0;dc<sh[0].length;dc++)
               if(sh[dr][dc]&&r===ar+dr&&c===ac+dc){
-                previewColor=drag.piece.color;previewOk=canPlace(sh,ar,ac);
+                previewColor=drag.piece.color;previewOk=previewCanPlace;
               }
         }
       }
+      const willClear=previewClearSet.has(r*N+c);
       if(board[r][c]){
         const impact=settings.animations?placementImpactFor(r,c):null;
         if(impact){
@@ -2222,11 +2245,13 @@ function drawGrid(){
         } else {
           block(x,y,s,board[r][c],1,true); // glow ativo
         }
+        if(willClear)drawPreviewClearGlow(x,y,s,accent);
       } else if(previewColor){
-        ctx.globalAlpha=0.5;ctx.fillStyle=previewOk?previewColor:'#e24b4a';
+        ctx.globalAlpha=willClear?0.72:0.5;ctx.fillStyle=previewOk?previewColor:'#e24b4a';
         rr(x,y,s,s,Math.max(2,s*0.14));ctx.fill();ctx.globalAlpha=1;
-        ctx.strokeStyle=previewOk?previewColor:'#e24b4a';ctx.lineWidth=1.5;
+        ctx.strokeStyle=willClear?accent:(previewOk?previewColor:'#e24b4a');ctx.lineWidth=willClear?2.2:1.5;
         rr(x,y,s,s,Math.max(2,s*0.14));ctx.stroke();
+        if(willClear)drawPreviewClearGlow(x,y,s,accent);
       } else if(isHint){
         ctx.globalAlpha=0.45+Math.sin(now()*0.006)*0.3;
         ctx.fillStyle=accent;rr(x,y,s,s,Math.max(2,s*0.14));ctx.fill();
@@ -2674,6 +2699,14 @@ function canPlace(shape,r,c){
         if(nr<0||nr>=N||nc<0||nc>=N||board[nr][nc])return false;
       }
   return true;
+}
+function previewCompletionCells(shape,r,c){
+  const next=board.map(row=>row.slice());
+  shape.forEach((row,dr)=>row.forEach((v,dc)=>{if(v)next[r+dr][c+dc]=true;}));
+  const cells=new Set();
+  for(let rr0=0;rr0<N;rr0++)if(next[rr0].every(v=>v))for(let cc=0;cc<N;cc++)cells.add(rr0*N+cc);
+  for(let cc=0;cc<N;cc++)if(next.every(row=>row[cc]))for(let rr0=0;rr0<N;rr0++)cells.add(rr0*N+cc);
+  return cells;
 }
 function place(piece,r,c){
   piece.shape.forEach((row,dr)=>row.forEach((v,dc)=>{if(v)board[r+dr][c+dc]=piece.color;}));
