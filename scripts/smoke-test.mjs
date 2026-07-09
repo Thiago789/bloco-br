@@ -38,7 +38,7 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
-  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.1.2-beta'"));
+  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.1.3-beta'"));
   ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem botao de diagnostico beta', html.includes('id="btn-copy-diagnostics"'));
   ok('HTML copia diagnostico beta', html.includes('function copyBetaDiagnostics()') && html.includes('function betaDiagnosticsText()'));
@@ -51,6 +51,7 @@ function validateHtml(html) {
   ok('Proxima cidade tem mensagem contextual', html.includes('function missionStartMessage(city)') && html.includes('Combos aceleram'));
   ok('Blocos tem simbolos culturais sutis', html.includes('function drawBlockMotif') && html.includes('function blockMotifIndex'));
   ok('Encaixe tem microqueda visual', html.includes('function spawnPlacementImpact') && html.includes('function placementImpactFor'));
+  ok('Pecas podem girar por toque', html.includes('function rotateShape') && html.includes('function rotateTrayPiece') && html.includes('canRotateShape(shape)'));
   ok('Abertura tem bandeja guiada', html.includes('function openingTray()') && html.includes('function shouldUseOpeningTray()'));
   ok('Abertura usa dica visual sem booster', html.includes('function maybeShowOpeningAssist()') && html.includes('hintTimer=setTimeout'));
   ok('Perda de vida gera bandeja de recuperacao', html.includes('function spawnRecoveryPieces()') && html.includes('Nova chance: peças menores para respirar.'));

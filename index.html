@@ -1422,7 +1422,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.1.2-beta';
+const APP_VERSION='1.1.3-beta';
 
 let scaleX=1,scaleY=1;
 function resizeCanvas(){
@@ -1450,6 +1450,7 @@ function updateHintSet(){ _hintSet=new Set(hintCells.map(([r,c])=>r*N+c)); }
 let hintPieceIdx=-1;
 let drag=null,anchor=null;
 let placementImpacts=[];
+let lastRotateHint=0;
 let rescueUsed=false;
 let gridWarnActive=false;
 let piecesWithoutCombo=0;
@@ -2401,6 +2402,14 @@ function drawTray(){
       if(v)block(ox+dc*(cs+2),oy+dr*(cs+2),cs,color);
     }));
     ctx.globalAlpha=1;
+    if(canRotateShape(shape)&&!isDragging){
+      const bx=sx+SLOT_W-24,by=sy+7;
+      ctx.fillStyle='rgba(244,196,48,0.14)';
+      rr(bx,by,17,17,8);ctx.fill();
+      ctx.strokeStyle='rgba(244,196,48,0.32)';ctx.lineWidth=1;
+      rr(bx,by,17,17,8);ctx.stroke();
+      txt('↻',bx+8.5,by+8,12,'#F4C430','center','Nunito');
+    }
   });
 }
 
@@ -2490,6 +2499,39 @@ function calcAnchor(lx,ly,shape){
   return{r:ar,c:ac};
 }
 
+function shapeKey(shape){
+  return `${shape.length}x${shape[0].length}:${shape.map(row=>row.join('')).join('|')}`;
+}
+
+function rotateShape(shape){
+  const rows=shape.length,cols=shape[0].length;
+  const rotated=[];
+  for(let c=0;c<cols;c++){
+    const row=[];
+    for(let r=rows-1;r>=0;r--)row.push(shape[r][c]);
+    rotated.push(row);
+  }
+  return rotated;
+}
+
+function canRotateShape(shape){
+  return shapeKey(shape)!==shapeKey(rotateShape(shape));
+}
+
+function rotateTrayPiece(idx){
+  const piece=pieces[idx];
+  if(!piece||!canRotateShape(piece.shape))return false;
+  piece.shape=rotateShape(piece.shape);
+  hintCells=[];hintPieceIdx=-1;updateHintSet();
+  soundPickup();
+  if(settings.animations)spawnStars(4,PAD+idx*(SLOT_W+GAP)+SLOT_W/2,Y_TRAY+SLOT_W/2);
+  if(now()-lastRotateHint>5000){
+    setMsg('PeÃ§a girada!','info',900);
+    lastRotateHint=now();
+  }
+  return true;
+}
+
 canvas.addEventListener('touchstart',onDown,{passive:false});
 canvas.addEventListener('mousedown',onDown);
 function onDown(e){
@@ -2552,7 +2594,7 @@ function onDown(e){
   if(pi>=0){
     // Calcula offset do toque dentro do slot da peça
     const sx=PAD+pi*(SLOT_W+GAP), sy=Y_TRAY;
-    drag={idx:pi,piece:pieces[pi],tx:x,ty:y,
+    drag={idx:pi,piece:pieces[pi],tx:x,ty:y,sx:x,sy:y,moved:false,
       ox:x-sx-SLOT_W/2,
       oy:y-sy-SLOT_W/2
     };
@@ -2573,6 +2615,7 @@ function onMove(e){
     lastTouchY=y;return;
   }
   if(!drag)return;
+  if(Math.hypot(x-drag.sx,y-drag.sy)>10)drag.moved=true;
   drag.tx=x;drag.ty=y;
   anchor=overGrid(x,y)?calcAnchor(x,y,drag.piece.shape):null;
 }
@@ -2581,6 +2624,15 @@ document.addEventListener('mouseup',onUp);
 function onUp(e){
   if(!drag)return;e.preventDefault();
   const{x,y}=getXY(e);
+  if(Math.hypot(x-drag.sx,y-drag.sy)>10){
+    drag.moved=true;
+    if(!anchor&&overGrid(x,y))anchor=calcAnchor(x,y,drag.piece.shape);
+  }
+  if(!drag.moved&&!anchor){
+    rotateTrayPiece(drag.idx);
+    drag=null;anchor=null;
+    return;
+  }
   if(anchor){
     const{r,c}=anchor;
     if(r>=0&&c>=0&&canPlace(drag.piece.shape,r,c)){
