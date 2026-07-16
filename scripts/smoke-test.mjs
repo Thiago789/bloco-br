@@ -38,7 +38,7 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
-  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.1.7-beta'"));
+  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.1.8-beta'"));
   ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem botao de diagnostico beta', html.includes('id="btn-copy-diagnostics"'));
   ok('HTML copia diagnostico beta', html.includes('function copyBetaDiagnostics()') && html.includes('function betaDiagnosticsText()'));
@@ -56,6 +56,7 @@ function validateHtml(html) {
   ok('Preview mostra pontos antes de soltar', html.includes('function previewCompletionStats') && html.includes('previewClearGain') && html.includes('Combo x${previewClearCombos}'));
   ok('Pecas podem girar por toque', html.includes('function rotateShape') && html.includes('function rotateTrayPiece') && html.includes('canRotateShape(shape)'));
   ok('Rotacao sugere jogada de limpeza', html.includes('function bestClearingMoveForShape') && html.includes('Giro abriu Combo x'));
+  ok('Dicas visuais expiram sozinhas', html.includes('function scheduleHintClear') && html.includes('scheduleHintClear(3800)'));
   ok('Abertura tem bandeja guiada', html.includes('function openingTray()') && html.includes('function shouldUseOpeningTray()'));
   ok('Abertura usa dica visual sem booster', html.includes('function maybeShowOpeningAssist()') && html.includes('hintTimer=setTimeout'));
   ok('Perda de vida gera bandeja de recuperacao', html.includes('function spawnRecoveryPieces()') && html.includes('Nova chance: peças menores para respirar.'));
