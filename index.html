@@ -24,6 +24,8 @@ canvas{display:block;position:fixed;top:0;left:0;touch-action:none;}
 #btn-profile-float:focus-visible{outline:2px solid #F4C430;outline-offset:2px;background:rgba(244,196,48,0.12);}
 #btn-map-float{position:fixed;top:79px;left:14px;z-index:8;width:132px;height:42px;border:none;border-radius:18px;background:rgba(255,255,255,0.001);color:transparent;cursor:pointer;touch-action:manipulation;}
 #btn-map-float:focus-visible{outline:2px solid #F4C430;outline-offset:2px;background:rgba(244,196,48,0.12);}
+#btn-challenge-float{position:fixed;top:90px;right:14px;z-index:8;width:38px;height:34px;border:none;border-radius:17px;background:rgba(255,255,255,0.001);color:transparent;cursor:pointer;touch-action:manipulation;}
+#btn-challenge-float:focus-visible{outline:2px solid #3A86FF;outline-offset:2px;background:rgba(58,134,255,.14);}
 
 /* ── OVERLAYS ── */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:20;align-items:center;justify-content:center;backdrop-filter:blur(12px);}
@@ -697,6 +699,7 @@ body[data-theme] #settings-panel .sp-slider{background:var(--theme-cell);}
 <button id="btn-profile-float" onclick="openProfile()" aria-label="Abrir perfil">Perfil</button>
 <button id="btn-settings-float" onclick="openSettings()" aria-label="Abrir configurações">Configurações</button>
 <button id="btn-map-float" onclick="openJourney()" aria-label="Abrir jornada">Jornada</button>
+<button id="btn-challenge-float" onclick="openDailyChallenge()" aria-label="Abrir desafios">Desafios</button>
 
 <!-- WIN MELHORADO -->
 <div class="overlay" id="ov-win">
@@ -1472,7 +1475,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.2.0-beta';
+const APP_VERSION='1.2.1-beta';
 
 let scaleX=1,scaleY=1;
 function positionFloatingButton(id,x,y,w,h){
@@ -1488,6 +1491,7 @@ function syncFloatingHitAreas(){
   positionFloatingButton('btn-profile-float',PAD+112,STATUS,54,H_HEADER);
   positionFloatingButton('btn-settings-float',VW-PAD-46,Y_HEADER-2,46,42);
   positionFloatingButton('btn-map-float',PAD,Y_CITY-8,146,H_CITY+12);
+  positionFloatingButton('btn-challenge-float',VW-PAD-40,Y_CITY-5,40,34);
 }
 function resizeCanvas(){
   const W=window.innerWidth,H=window.innerHeight;
