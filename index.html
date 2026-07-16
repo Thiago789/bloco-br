@@ -254,7 +254,8 @@ body[data-theme] .jp-city,body[data-theme] .jp-world-pill{background:var(--theme
 #ov-daily-challenge{position:fixed;inset:0;z-index:25;display:none;flex-direction:column;align-items:center;justify-content:center;}
 #ov-daily-challenge.show{display:flex;}
 #dc-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.82);backdrop-filter:blur(12px);}
-#dc-panel{position:relative;z-index:1;background:#0f1e2e;border-radius:24px;width:90%;max-width:340px;overflow:hidden;animation:su .32s cubic-bezier(.34,1.56,.64,1);}
+#dc-panel{position:relative;z-index:1;background:#0f1e2e;border-radius:24px;width:90%;max-width:340px;max-height:calc(100dvh - 28px);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;animation:su .32s cubic-bezier(.34,1.56,.64,1);}
+#dc-panel *{touch-action:auto;}
 .dc-header{padding:24px 20px 16px;background:linear-gradient(135deg,#1a0a2e,#0a1f38);display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;}
 .dc-header-stripe{position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#FF6B35,#F4C430,#7C4DFF);}
 .dc-icon{font-size:48px;animation:dcIconSpin 3s ease-in-out infinite;}
@@ -296,6 +297,27 @@ body[data-theme] .jp-city,body[data-theme] .jp-world-pill{background:var(--theme
 #dc-bar{position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,#FF6B35,#F4C430);padding:8px 16px;display:none;align-items:center;justify-content:space-between;z-index:18;font-size:11px;font-weight:800;color:#000;}
 #dc-bar.show{display:flex;}
 #dc-bar-exit{background:rgba(0,0,0,0.15);border:none;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:800;cursor:pointer;color:#000;}
+.rain-preview-btn{border-color:rgba(58,134,255,.35);color:#7fb5ff;background:rgba(58,134,255,.1);}
+#rain-bar{position:fixed;top:0;left:0;right:0;background:linear-gradient(90deg,#3A86FF,#00C4B4);padding:8px 14px;display:none;align-items:center;justify-content:space-between;z-index:19;color:#fff;font-size:11px;font-weight:900;box-shadow:0 5px 18px rgba(0,0,0,.24);}
+#rain-bar.show{display:flex;}
+.rain-bar-main{display:flex;align-items:center;gap:9px;}
+.rain-clock{font-family:'Baloo 2',cursive;font-size:15px;min-width:38px;color:#fff;}
+#rain-bar-exit{background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:5px 10px;color:#fff;font:800 10px 'Nunito',sans-serif;cursor:pointer;}
+#ov-rain-result .ov{max-width:330px;padding:0;gap:0;}
+.rain-result-head{width:100%;padding:24px 22px 18px;text-align:center;background:linear-gradient(145deg,#082640,#103c52);}
+.rain-result-icon{font-size:48px;line-height:1;margin-bottom:8px;}
+.rain-result-title{font:800 23px 'Baloo 2',cursive;color:#f5f0e8;}
+.rain-result-sub{font-size:11px;color:rgba(245,240,232,.55);margin-top:3px;}
+.rain-result-score{font:800 38px 'Baloo 2',cursive;color:#F4C430;line-height:1;margin-top:12px;}
+.rain-result-label{font-size:8px;text-transform:uppercase;letter-spacing:1px;color:rgba(245,240,232,.4);}
+.rain-result-stats{width:100%;display:grid;grid-template-columns:repeat(3,1fr);background:#162032;border-top:1px solid rgba(255,255,255,.06);}
+.rain-result-stat{padding:13px 6px;text-align:center;border-right:1px solid rgba(255,255,255,.06);}
+.rain-result-stat:last-child{border-right:none;}
+.rain-result-val{font:800 16px 'Baloo 2',cursive;color:#f5f0e8;}
+.rain-result-lbl{font-size:8px;color:rgba(245,240,232,.4);text-transform:uppercase;}
+.rain-result-actions{width:100%;padding:14px 16px 18px;background:#162032;display:flex;flex-direction:column;gap:8px;}
+.rain-retry{border:none;border-radius:12px;padding:13px;background:#009C3B;color:#fff;font:900 14px 'Nunito',sans-serif;cursor:pointer;}
+.rain-leave{border:1px solid rgba(255,255,255,.1);border-radius:11px;padding:10px;background:rgba(255,255,255,.06);color:rgba(245,240,232,.62);font:800 12px 'Nunito',sans-serif;cursor:pointer;}
 
 /* ── SPLASH SCREEN ── */
 #splash{position:fixed;inset:0;z-index:100;background:#0a1628;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;overflow:hidden;}
@@ -911,6 +933,7 @@ body[data-theme] #settings-panel .sp-slider{background:var(--theme-cell);}
     </div>
     <div class="dc-bottom">
       <button class="dc-play-btn" id="dc-play-btn" onclick="startDailyChallenge()">🚀 Jogar Desafio</button>
+      <button class="dc-close-btn rain-preview-btn" onclick="startRainMode()">⚡ Testar Chuva BR · 60s</button>
       <button class="dc-close-btn" onclick="closeDailyChallenge()">Fechar</button>
     </div>
   </div>
@@ -920,6 +943,33 @@ body[data-theme] #settings-panel .sp-slider{background:var(--theme-cell);}
 <div id="dc-bar">
   <span>🎯 Desafio Diário: <span id="dc-bar-progress">0/300</span></span>
   <button id="dc-bar-exit" onclick="exitDailyChallenge()">Sair</button>
+</div>
+
+<!-- Modo experimental: uma peça por vez -->
+<div id="rain-bar">
+  <div class="rain-bar-main"><span>⚡ Chuva BR</span><span class="rain-clock" id="rain-time">60s</span><span id="rain-score">0 pts</span></div>
+  <button id="rain-bar-exit" onclick="exitRainMode()">Sair</button>
+</div>
+
+<div class="overlay" id="ov-rain-result">
+  <div class="ov">
+    <div class="rain-result-head">
+      <div class="rain-result-icon">⚡</div>
+      <div class="rain-result-title">Chuva encerrada!</div>
+      <div class="rain-result-sub" id="rain-result-reason">Sessão de 60 segundos</div>
+      <div class="rain-result-score" id="rain-result-score">0</div>
+      <div class="rain-result-label">pontos</div>
+    </div>
+    <div class="rain-result-stats">
+      <div class="rain-result-stat"><div class="rain-result-val" id="rain-result-pieces">0</div><div class="rain-result-lbl">Peças</div></div>
+      <div class="rain-result-stat"><div class="rain-result-val" id="rain-result-lines">0</div><div class="rain-result-lbl">Linhas</div></div>
+      <div class="rain-result-stat"><div class="rain-result-val" id="rain-result-best">0</div><div class="rain-result-lbl">Recorde</div></div>
+    </div>
+    <div class="rain-result-actions">
+      <button class="rain-retry" onclick="startRainMode()">Jogar novamente</button>
+      <button class="rain-leave" onclick="leaveRainResult()">Voltar para a jornada</button>
+    </div>
+  </div>
 </div>
 
 <!-- LOJA DE SKINS -->
@@ -1422,15 +1472,30 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.1.8-beta';
+const APP_VERSION='1.2.0-beta';
 
 let scaleX=1,scaleY=1;
+function positionFloatingButton(id,x,y,w,h){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.style.left=(x*scaleX)+'px';
+  el.style.top=(y*scaleY)+'px';
+  el.style.width=Math.max(34,w*scaleX)+'px';
+  el.style.height=Math.max(34,h*scaleY)+'px';
+  el.style.right='auto';
+}
+function syncFloatingHitAreas(){
+  positionFloatingButton('btn-profile-float',PAD+112,STATUS,54,H_HEADER);
+  positionFloatingButton('btn-settings-float',VW-PAD-46,Y_HEADER-2,46,42);
+  positionFloatingButton('btn-map-float',PAD,Y_CITY-8,146,H_CITY+12);
+}
 function resizeCanvas(){
   const W=window.innerWidth,H=window.innerHeight;
   canvas.width=W*DPR; canvas.height=H*DPR;
   canvas.style.width=W+'px'; canvas.style.height=H+'px';
   scaleX=W/VW; scaleY=H/VH;
   ctx.setTransform(DPR*scaleX,0,0,DPR*scaleY,0,0);
+  syncFloatingHitAreas();
 }
 window.addEventListener('resize',resizeCanvas);
 resizeCanvas();
@@ -1462,6 +1527,14 @@ let myTeam=null;
 let maxOccupancySeen=0;
 let totalPiecesPlaced=0;
 let missionCloseToastShown=false;
+let pendingDailyReward=false;
+let inRainMode=false;
+let rainEndsAt=0;
+let rainDropStartedAt=0;
+let rainPiecesPlaced=0;
+let rainLinesCleared=0;
+let rainBest=0;
+let rainFinished=false;
 
 // Stats da partida (para conquistas)
 let st={score:0,combos:0,maxCombo:0,linesCleared:0,level:1,streak:0,missionNoBoosters:true,missionCompleted:false,citiesCompleted:0,boostersUsedThisMission:0,dcPieces:0};
@@ -1540,6 +1613,10 @@ function checkDailyReward(){
   try{
     const last=localStorage.getItem('bbr2_lastday');
     const today=getTodayStr();
+    if(last!==today&&totalPiecesPlaced===0){
+      pendingDailyReward=true;
+      return;
+    }
     if(last===today)return; // já resgatou hoje
     const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1);
     const yStr=getLocalDateStr(yesterday);
@@ -1547,6 +1624,7 @@ function checkDailyReward(){
     else if(last!==today) streak=1;
     const base=30; const bonus=Math.min(streak*10,200);
     const reward=base+bonus;
+    pendingDailyReward=false;
     queueOverlay(()=>{
       document.getElementById('daily-streak').textContent=`🔥 Sequência de ${streak} dia${streak>1?'s':''}! Bônus: +${bonus} moedas`;
       document.getElementById('daily-coins').textContent=reward;
@@ -1561,6 +1639,11 @@ function checkDailyReward(){
         soundDailyReward();
       };
     });  }catch(e){}
+}
+function maybeShowDeferredDailyReward(){
+  if(!pendingDailyReward||inRainMode||inDailyMode)return;
+  pendingDailyReward=false;
+  setTimeout(checkDailyReward,650);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2399,6 +2482,12 @@ function showAlmostThere(city){
 }
 
 function drawObjective(){
+  if(inRainMode){
+    const cy=Y_OBJ+H_OBJ/2;
+    txt('CHUVA BR · uma peça por vez',VW/2,cy-7,10,'#7fb5ff','center');
+    txt('Toque para girar · linhas rendem +3s',VW/2,cy+10,8,'rgba(245,240,232,0.5)','center');
+    return;
+  }
   const city=CITIES[Math.min(fase,CITIES.length-1)];
   const cy=Y_OBJ+H_OBJ/2;
   txt(objectiveText(city),VW/2,cy-8,10,'#F4C430','center');
@@ -2426,6 +2515,7 @@ function drawObjective(){
 
 function drawTray(){
   pieces.forEach((piece,i)=>{
+    if(inRainMode&&i!==1)return;
     const sx=PAD+i*(SLOT_W+GAP),sy=Y_TRAY;
     const isDragging=drag&&drag.idx===i;
     const isHintPiece=hintPieceIdx===i&&hintCells.length>0;
@@ -2452,8 +2542,10 @@ function drawTray(){
     const rows=shape.length,cols=shape[0].length;
     const cs=Math.floor((SLOT_W-18)/Math.max(rows,cols));
     const pw=cols*(cs+2)-2,ph=rows*(cs+2)-2;
-    const ox=sx+(SLOT_W-pw)/2,oy=sy+(SLOT_W-ph)/2;
+    const rainDrop=inRainMode?Math.max(0,1-(now()-rainDropStartedAt)/420):0;
+    const ox=sx+(SLOT_W-pw)/2,oy=sy+(SLOT_W-ph)/2-rainDrop*72;
     ctx.globalAlpha=isDragging?0.2:1;
+    if(inRainMode&&!isDragging)ctx.globalAlpha=Math.max(.25,1-rainDrop*.55);
     shape.forEach((row,dr)=>row.forEach((v,dc)=>{
       if(v)block(ox+dc*(cs+2),oy+dr*(cs+2),cs,color);
     }));
@@ -2491,6 +2583,10 @@ function drawDrag(){
 
 function drawBoosters(){
   const bSize=46,bg=10,totalW=bSize*3+bg*2,bx=(VW-totalW)/2,by=Y_BOOST;
+  if(inRainMode){
+    txt('Encaixe rápido. Cada linha devolve tempo.',VW/2,by+18,9,'rgba(127,181,255,.78)','center');
+    return;
+  }
   const labels=['💣','💡','🔄'];
   const counts=[boosters.bomb,boosters.hint,boosters.shuffle];
   const costs=[10,5,8];
@@ -2538,6 +2634,7 @@ function hitTray(x,y){
   return -1;
 }
 function hitBooster(x,y){
+  if(inRainMode)return -1;
   const bSize=46,bg=10,totalW=bSize*3+bg*2,bx=(VW-totalW)/2,by=Y_BOOST;
   for(let i=0;i<3;i++){
     const tx=bx+i*(bSize+bg);
@@ -2630,6 +2727,8 @@ function onDown(e){
     return;
   }
 
+  if(inRainMode&&y<Y_GRID)return;
+
   // Botão configurações: zona maior para toque confortável no mobile.
   const tutBtnX=VW-PAD-38, tutBtnY=Y_HEADER-2;
   if(x>=tutBtnX&&x<=VW-PAD+4&&y>=tutBtnY&&y<=tutBtnY+40){
@@ -2705,9 +2804,13 @@ function onUp(e){
     if(r>=0&&c>=0&&canPlace(drag.piece.shape,r,c)){
       place(drag.piece,r,c);
       pieces[drag.idx]=null;
-      if(pieces.every(p=>p===null))spawnPieces();
-      maybeShowOpeningAssist();
-      checkWin();checkOver();
+      if(inRainMode){
+        spawnRainPiece();
+      } else {
+        if(pieces.every(p=>p===null))spawnPieces();
+        maybeShowOpeningAssist();
+        checkWin();checkOver();
+      }
     } else if(overGrid(x,y)){
       setMsg('Não cabe aqui!','err',1100);
     }
@@ -2765,16 +2868,22 @@ function place(piece,r,c){
   }
   updateDailyProgress('pieces', 1);
   totalPiecesPlaced++;
+  if(inRainMode){
+    rainPiecesPlaced++;
+    score+=piece.shape.flat().filter(Boolean).length;
+    st.score=score;
+  }
   st.dcPieces=(st.dcPieces||0)+1;
   sessionPlacements++;
   const city=CITIES[Math.min(fase,CITIES.length-1)];
-  if(city.goal==='pecas'){
+  if(!inRainMode&&city.goal==='pecas'){
     const beforeGoal=goal;
     addObjectiveProgress(city,1);
     reportMissionProgress(city,beforeGoal);
     showAlmostThere(city);
   }
   clearLines();
+  maybeShowDeferredDailyReward();
 }
 function clearLines(){
   const rows=[],cols=[];
@@ -2791,8 +2900,14 @@ function clearLines(){
   score+=gain; st.score=score;
   st.combos++; st.linesCleared+=rows.length+cols.length;
   st.maxCombo=Math.max(st.maxCombo,combos);
+  if(inRainMode){
+    rainLinesCleared+=combos;
+    rainEndsAt+=combos*3000;
+    setMsg(`+${combos*3}s pela linha!`,'ok',1200);
+  }
 
   // XP
+  if(!inRainMode){
   xp+=gain;
   if(xp>=xpNext){xp-=xpNext;level++;xpNext=Math.floor(xpNext*1.3);st.level=level;soundLevelUp();toast(`Nível ${level}! 🎯`);}
 
@@ -2805,6 +2920,7 @@ function clearLines(){
   else if(cityNow.goal==='score') addObjectiveProgress(cityNow, gain);
   reportMissionProgress(cityNow,beforeGoal);
   showAlmostThere(cityNow);
+  }
 
   // Flash + partículas nas células limpas
   const clearedArr=[...cleared].map(idx=>([Math.floor(idx/N),idx%N]));
@@ -2820,6 +2936,7 @@ function clearLines(){
     board[r][c]=null;
   });
 
+  if(!inRainMode){
   if(score>best){best=score;}
   saveData();
   checkAchievements();
@@ -2828,6 +2945,18 @@ function clearLines(){
   updateDailyProgress('lines', rows.length+cols.length);
   updateDailyProgress('score', gain);
   if(combos>1) updateDailyProgress('combo', 1);
+  }
+
+  if(inRainMode){
+    if(combos>1){
+      soundCombo(combos);
+      toast(`Combo x${combos}! +${combos*3}s`,'#D85A30');
+    } else {
+      soundClear(combos);
+      setMsg(`+${gain} pts · +3s`,'ok',1400);
+    }
+    return;
+  }
 
   if(combos>1){
     piecesWithoutCombo=0; // reset — jogador conseguiu combo
@@ -3213,6 +3342,9 @@ function maybeShowOpeningAssist(){
   scheduleHintClear(4200);
 }
 function initGame(){
+  inRainMode=false;rainFinished=true;
+  document.getElementById('rain-bar').classList.remove('show');
+  document.getElementById('ov-rain-result').classList.remove('show');
   board=Array.from({length:N},()=>Array(N).fill(null));
   score=0;level=1;xp=0;xpNext=300;lives=3;fase=0;goal=0;
   boosters={bomb:2,hint:3,shuffle:2};
@@ -3648,7 +3780,7 @@ let bannerRetryTimer=null;
 function canShowBanner(){
   const onboardingOpen=overlayActive||document.getElementById('ov-tutorial')?.classList.contains('active')||document.getElementById('ov-daily')?.classList.contains('show');
   const firstMissionWarmup=(st.citiesCompleted||0)===0&&fase===0&&score<250;
-  const blockingPanel=rankingVisible||document.querySelector('#ov-settings.show,#ov-shop.show,#ov-profile.show,#ov-journey.show,#ov-team.show,#ov-daily-challenge.show');
+  const blockingPanel=rankingVisible||inRainMode||document.querySelector('#ov-settings.show,#ov-shop.show,#ov-profile.show,#ov-journey.show,#ov-team.show,#ov-daily-challenge.show,#ov-rain-result.show');
   return !onboardingOpen&&!firstMissionWarmup&&!blockingPanel;
 }
 
@@ -4483,7 +4615,7 @@ function updateFirstSessionCard(){
   const countEl=document.getElementById('fs-count');
   if(!card||!stepsEl||!countEl)return;
   const doneCount=FIRST_SESSION_STEPS.filter(step=>step.done()).length;
-  const blocking=!!document.querySelector('#ov-settings.show,#ov-shop.show,#ov-profile.show,#ov-journey.show,#ov-team.show,#ov-daily-challenge.show,#ov-daily.show,#ov-win.show,#ov-lose.show,#ov-region-quiz.show,#ov-tutorial.active');
+  const blocking=inRainMode||!!document.querySelector('#ov-settings.show,#ov-shop.show,#ov-profile.show,#ov-journey.show,#ov-team.show,#ov-daily-challenge.show,#ov-daily.show,#ov-win.show,#ov-lose.show,#ov-rain-result.show,#ov-region-quiz.show,#ov-tutorial.active');
   const hide=doneCount>=FIRST_SESSION_STEPS.length||(st.citiesCompleted||0)>0||blocking||rankingVisible;
   const renderKey=[doneCount,hide,score,fase].join('|');
   if(renderKey===firstSessionRenderKey)return;
@@ -5327,6 +5459,86 @@ function renderDailyChallenge(){
   }
 }
 
+const RAIN_DURATION_MS=60000;
+function spawnRainPiece(){
+  if(!inRainMode)return;
+  const pool=getShapePool();
+  const playable=pool.filter(shape=>countMovesForShape(shape)>0);
+  if(!playable.length){
+    finishRainMode('O tabuleiro ficou sem encaixes');
+    return;
+  }
+  const shape=playable[Math.floor(Math.random()*playable.length)];
+  const color=COLORS[Math.floor(Math.random()*COLORS.length)];
+  pieces=[null,{shape,color},null];
+  rainDropStartedAt=now();
+  hintCells=[];hintPieceIdx=-1;updateHintSet();
+}
+
+function startRainMode(){
+  closeDailyChallenge();
+  hideBanner();
+  document.getElementById('ov-rain-result').classList.remove('show');
+  document.getElementById('dc-bar').classList.remove('show');
+  inDailyMode=false;
+  inRainMode=true;
+  rainFinished=false;
+  rainPiecesPlaced=0;
+  rainLinesCleared=0;
+  rainEndsAt=now()+RAIN_DURATION_MS;
+  try{rainBest=parseInt(localStorage.getItem('bbr2_rain_best'))||0;}catch(e){rainBest=0;}
+  board=Array.from({length:N},()=>Array(N).fill(null));
+  score=0;lives=1;goal=0;bombMode=false;drag=null;anchor=null;
+  particles=[];flashCells=[];floatingTexts=[];stars=[];
+  st.combos=0;st.maxCombo=0;st.linesCleared=0;st.score=0;st.dcPieces=0;
+  document.getElementById('rain-bar').classList.add('show');
+  spawnRainPiece();
+  updateRainMode(now());
+  setMsg('A peça caiu. Toque para girar!','info',2200);
+  toast('Chuva BR: valendo!','#3A86FF');
+}
+
+function updateRainMode(ts){
+  if(!inRainMode||rainFinished)return;
+  const remaining=Math.max(0,rainEndsAt-ts);
+  const seconds=Math.ceil(remaining/1000);
+  const timeEl=document.getElementById('rain-time');
+  const scoreEl=document.getElementById('rain-score');
+  if(timeEl)timeEl.textContent=seconds+'s';
+  if(scoreEl)scoreEl.textContent=score+' pts';
+  if(remaining<=0)finishRainMode('Tempo encerrado');
+}
+
+function finishRainMode(reason){
+  if(rainFinished)return;
+  rainFinished=true;
+  inRainMode=false;
+  drag=null;anchor=null;pieces=[null,null,null];
+  document.getElementById('rain-bar').classList.remove('show');
+  rainBest=Math.max(rainBest,score);
+  try{localStorage.setItem('bbr2_rain_best',rainBest);}catch(e){}
+  document.getElementById('rain-result-reason').textContent=reason;
+  document.getElementById('rain-result-score').textContent=score.toLocaleString('pt-BR');
+  document.getElementById('rain-result-pieces').textContent=rainPiecesPlaced;
+  document.getElementById('rain-result-lines').textContent=rainLinesCleared;
+  document.getElementById('rain-result-best').textContent=rainBest.toLocaleString('pt-BR');
+  document.getElementById('ov-rain-result').classList.add('show');
+  soundGameOver();
+}
+
+function exitRainMode(){
+  inRainMode=false;rainFinished=true;drag=null;anchor=null;
+  document.getElementById('rain-bar').classList.remove('show');
+  document.getElementById('ov-rain-result').classList.remove('show');
+  initGame();
+  setMsg('De volta à jornada','info',1300);
+}
+
+function leaveRainResult(){
+  document.getElementById('ov-rain-result').classList.remove('show');
+  initGame();
+}
+
 function startDailyChallenge(){
   if(dailyChallenge.completed) return;
   closeDailyChallenge();
@@ -5807,6 +6019,7 @@ function loop(ts){
   // Limitar a ~60fps mas não forçar se dispositivo for mais lento
   if(ts-_lastDrawTime<14) return; // skip se menos de ~14ms (>70fps)
   _lastDrawTime=ts;
+  updateRainMode(ts);
   draw(ts);
   updateFirstSessionCard();
 }

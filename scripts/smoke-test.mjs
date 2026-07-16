@@ -38,7 +38,7 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
-  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.1.8-beta'"));
+  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.2.0-beta'"));
   ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem botao de diagnostico beta', html.includes('id="btn-copy-diagnostics"'));
   ok('HTML copia diagnostico beta', html.includes('function copyBetaDiagnostics()') && html.includes('function betaDiagnosticsText()'));
@@ -62,6 +62,12 @@ function validateHtml(html) {
   ok('Perda de vida gera bandeja de recuperacao', html.includes('function spawnRecoveryPieces()') && html.includes('Nova chance: peças menores para respirar.'));
   ok('Quiz regional tem recompensa dinamica', html.includes('function regionalQuizReward()'));
   ok('Quiz regional escala por estrelas', html.includes('stars>=3?2:1') && html.includes('Bônus cultural perfeito'));
+  ok('Chuva BR tem entrada experimental', html.includes('Testar Chuva BR') && html.includes('function startRainMode()'));
+  ok('Chuva BR usa uma peca por vez', html.includes('function spawnRainPiece()') && html.includes('pieces=[null,{shape,color},null]'));
+  ok('Chuva BR tem cronometro e resultado', html.includes('RAIN_DURATION_MS=60000') && html.includes('function finishRainMode(reason)') && html.includes('id="ov-rain-result"'));
+  ok('Linhas dao tempo no Chuva BR', html.includes('rainEndsAt+=combos*3000'));
+  ok('Recompensa diaria espera a primeira jogada', html.includes('pendingDailyReward=true') && html.includes('function maybeShowDeferredDailyReward()'));
+  ok('Alvos flutuantes acompanham o canvas', html.includes('function syncFloatingHitAreas()') && html.includes('positionFloatingButton'));
   validateMobileContracts(html);
 
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(match => match[1]).join('\n');
