@@ -38,6 +38,14 @@ No GitHub Actions, o smoke test roda automaticamente sem `--insecure`.
 
 O smoke test cobre arquivos PWA, sintaxe do jogo, manifest, service worker, link publicado, tamanho minimo de toque e rolagem dos paineis Perfil, Configuracoes e Jornada.
 
+O laboratorio de jogadores simulados executa oito perfis sobre a primeira missao, as 16 cidades e a Chuva BR:
+
+```powershell
+node scripts/simulate-players.mjs --sessions 10 --seed bloco-br-beta --report SIMULATION_REPORT.md --ci
+```
+
+O relatorio mede conclusao, quantidade de jogadas, erros provaveis, sequencias e desempenho no modo curto. Ele ajuda a encontrar regressao de equilibrio, mas nao substitui testes com pessoas reais.
+
 Feedback beta pode ser enviado pelo botao dentro de Configuracoes ou pela aba Issues do GitHub.
 
 ## Publicar no GitHub Pages
@@ -58,6 +66,8 @@ manifest.webmanifest    Manifest PWA
 sw.js                   Cache offline basico
 assets/icon.svg         Icone do app
 local-server.mjs        Servidor local simples
+scripts/simulate-players.mjs Laboratorio deterministico de jogadores
+SIMULATION_REPORT.md    Baseline atual de equilibrio
 ```
 
 ## Observações

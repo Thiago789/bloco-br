@@ -224,7 +224,7 @@ async function fetchFreshHtml() {
 }
 
 async function runLocal() {
-  ['index.html', 'manifest.webmanifest', 'sw.js', 'assets/icon.svg'].forEach(file => {
+  ['index.html', 'manifest.webmanifest', 'sw.js', 'assets/icon.svg', 'scripts/simulate-players.mjs'].forEach(file => {
     ok(`Arquivo existe: ${file}`, fs.existsSync(path.join(root, file)));
   });
   validateHtml(readLocal('index.html'));

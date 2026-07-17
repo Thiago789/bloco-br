@@ -16,3 +16,6 @@ jobs:
 
       - name: Run smoke test
         run: node scripts/smoke-test.mjs
+
+      - name: Simulate player profiles
+        run: node scripts/simulate-players.mjs --sessions 10 --seed bloco-br-beta --ci

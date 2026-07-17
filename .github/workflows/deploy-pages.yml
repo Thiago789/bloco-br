@@ -30,6 +30,9 @@ jobs:
       - name: Run local smoke test
         run: node scripts/smoke-test.mjs
 
+      - name: Simulate player profiles
+        run: node scripts/simulate-players.mjs --sessions 10 --seed bloco-br-beta --ci
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

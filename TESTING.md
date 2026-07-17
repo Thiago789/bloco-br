@@ -32,6 +32,20 @@ Para validar o site publicado:
 node scripts/smoke-test.mjs --url "https://thiago789.github.io/bloco-br/" --insecure
 ```
 
+## Jogadores simulados
+
+Para executar 80 sessoes reproduziveis com oito perfis:
+
+```powershell
+node scripts/simulate-players.mjs --sessions 10 --seed bloco-br-beta --report SIMULATION_REPORT.md --ci
+```
+
+Perfis incluidos: Novato, Aleatorio, Cauteloso, Cacador de linhas, Estrategista de combos, Especialista, Impaciente e Caotico.
+
+Cada sessao cobre a primeira missao, uma cidade distribuida e uma rodada da Chuva BR. O modo `--ci` falha quando a primeira missao cai abaixo de 70%, passa de 25 jogadas em media, as missoes ficam abaixo de 35% ou a Chuva BR deixa de pontuar.
+
+O laboratorio testa regras e equilibrio provavel. Diversao, clareza percebida, audio real, vibracao e vontade de jogar novamente ainda precisam de pessoas.
+
 ## O que observar
 
 - Algum botao ficou escondido ou dificil de tocar?
