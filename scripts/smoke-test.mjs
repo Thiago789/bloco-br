@@ -38,7 +38,7 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
-  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.2.2-beta'"));
+  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.2.3-beta'"));
   ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem botao de diagnostico beta', html.includes('id="btn-copy-diagnostics"'));
   ok('HTML copia diagnostico beta', html.includes('function copyBetaDiagnostics()') && html.includes('function betaDiagnosticsText()'));
@@ -74,6 +74,10 @@ function validateHtml(html) {
   ok('Fim de jogo destaca melhor jogada', html.includes('bestMoveGain') && html.includes('id="go-best-move"'));
   ok('Revanche zera estatisticas da rodada', html.includes('function resetMissionRunStats()') && html.includes('score=0;lives=3;goal=0'));
   ok('Revanche e a acao principal', html.includes('↺ Tentar bater meu recorde') && html.includes('.go-btn-retry{order:-3'));
+  ok('Canvas preserva proporcao em telas largas', html.includes('centeredViewport=(W/H)>.66') && html.includes('fitScale=Math.min(W/VW,H/VH)'));
+  ok('Canvas centralizado corrige coordenadas de toque', html.includes('(cx-viewOffsetX)/scaleX') && html.includes('(cy-viewOffsetY)/scaleY'));
+  ok('Efeitos acompanham deslocamento do canvas', html.includes('viewOffsetX+x*scaleX-20') && html.includes('viewOffsetY+y*scaleY-20'));
+  ok('Alvos de toque ficam centralizados nos icones', html.includes('(hitW-scaledW)/2') && html.includes('(hitH-scaledH)/2'));
   validateMobileContracts(html);
 
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(match => match[1]).join('\n');

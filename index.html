@@ -16,7 +16,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Nunito:wght@700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:none;user-select:none;}
-html,body{width:100%;height:100%;overflow:hidden;background:#0d1b2a;font-family:'Nunito',sans-serif;}
+html,body{width:100%;height:100%;overflow:hidden;background:#07111c;font-family:'Nunito',sans-serif;}
 canvas{display:block;position:fixed;top:0;left:0;touch-action:none;}
 #btn-settings-float{position:fixed;top:32px;right:14px;z-index:8;width:38px;height:38px;border:none;border-radius:19px;background:rgba(255,255,255,0.001);color:transparent;cursor:pointer;touch-action:manipulation;}
 #btn-settings-float:focus-visible{outline:2px solid #F4C430;outline-offset:2px;background:rgba(244,196,48,0.12);}
@@ -1501,16 +1501,18 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.2.2-beta';
+const APP_VERSION='1.2.3-beta';
 
-let scaleX=1,scaleY=1;
+let scaleX=1,scaleY=1,viewOffsetX=0,viewOffsetY=0,centeredViewport=false;
 function positionFloatingButton(id,x,y,w,h){
   const el=document.getElementById(id);
   if(!el)return;
-  el.style.left=(x*scaleX)+'px';
-  el.style.top=(y*scaleY)+'px';
-  el.style.width=Math.max(34,w*scaleX)+'px';
-  el.style.height=Math.max(34,h*scaleY)+'px';
+  const scaledW=w*scaleX,scaledH=h*scaleY;
+  const hitW=Math.max(34,scaledW),hitH=Math.max(34,scaledH);
+  el.style.left=(viewOffsetX+x*scaleX-(hitW-scaledW)/2)+'px';
+  el.style.top=(viewOffsetY+y*scaleY-(hitH-scaledH)/2)+'px';
+  el.style.width=hitW+'px';
+  el.style.height=hitH+'px';
   el.style.right='auto';
 }
 function syncFloatingHitAreas(){
@@ -1520,11 +1522,21 @@ function syncFloatingHitAreas(){
   positionFloatingButton('btn-challenge-float',VW-PAD-40,Y_CITY-5,40,34);
 }
 function resizeCanvas(){
-  const W=window.innerWidth,H=window.innerHeight;
+  const W=Math.max(1,window.innerWidth),H=Math.max(1,window.innerHeight);
   canvas.width=W*DPR; canvas.height=H*DPR;
   canvas.style.width=W+'px'; canvas.style.height=H+'px';
-  scaleX=W/VW; scaleY=H/VH;
-  ctx.setTransform(DPR*scaleX,0,0,DPR*scaleY,0,0);
+  centeredViewport=(W/H)>.66;
+  if(centeredViewport){
+    const fitScale=Math.min(W/VW,H/VH);
+    scaleX=fitScale;scaleY=fitScale;
+    viewOffsetX=(W-VW*fitScale)/2;
+    viewOffsetY=(H-VH*fitScale)/2;
+  } else {
+    scaleX=W/VW;scaleY=H/VH;
+    viewOffsetX=0;viewOffsetY=0;
+  }
+  document.body.dataset.canvasLayout=centeredViewport?'centered':'fluid';
+  ctx.setTransform(DPR*scaleX,0,0,DPR*scaleY,DPR*viewOffsetX,DPR*viewOffsetY);
   syncFloatingHitAreas();
 }
 window.addEventListener('resize',resizeCanvas);
@@ -1886,8 +1898,8 @@ function floatCoin(x,y,text){
   const el=document.createElement('div');
   el.className='coin-float';
   el.textContent=text;
-  el.style.left=(x*scaleX-20)+'px';
-  el.style.top=(y*scaleY-20)+'px';
+  el.style.left=(viewOffsetX+x*scaleX-20)+'px';
+  el.style.top=(viewOffsetY+y*scaleY-20)+'px';
   document.body.appendChild(el);
   setTimeout(()=>el.remove(),1300);
 }
@@ -2656,7 +2668,7 @@ function drawBoosters(){
 // ═══════════════════════════════════════════════════════════════
 // INPUT
 // ═══════════════════════════════════════════════════════════════
-function toLogical(cx,cy){return{x:cx/scaleX,y:cy/scaleY};}
+function toLogical(cx,cy){return{x:(cx-viewOffsetX)/scaleX,y:(cy-viewOffsetY)/scaleY};}
 function getXY(e){
   if(e.touches&&e.touches.length)return toLogical(e.touches[0].clientX,e.touches[0].clientY);
   if(e.changedTouches&&e.changedTouches.length)return toLogical(e.changedTouches[0].clientX,e.changedTouches[0].clientY);
