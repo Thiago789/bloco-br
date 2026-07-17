@@ -1510,7 +1510,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.2.7-beta';
+const APP_VERSION='1.2.8-beta';
 
 let scaleX=1,scaleY=1,viewOffsetX=0,viewOffsetY=0,centeredViewport=false;
 function positionFloatingButton(id,x,y,w,h){
@@ -2720,9 +2720,33 @@ function calcAnchor(lx,ly,shape){
 }
 
 const TOUCH_DRAG_LIFT=58;
+const TOUCH_SNAP_MARGIN=18;
 function dragPosition(x,y){
   const lift=drag&&drag.isTouch&&drag.moved?TOUCH_DRAG_LIFT:0;
   return{x,y:y-lift};
+}
+
+function dragAnchorAt(x,y,shape){
+  const margin=drag&&drag.isTouch?TOUCH_SNAP_MARGIN:0;
+  if(x<GX-margin||x>GX+GRID_SZ+margin||y<Y_GRID-margin||y>Y_GRID+GRID_SZ+margin)return null;
+  const next=calcAnchor(x,y,shape);
+  if(!drag||!drag.isTouch)return next;
+  next.r=Math.max(0,Math.min(N-shape.length,next.r));
+  next.c=Math.max(0,Math.min(N-shape[0].length,next.c));
+  return next;
+}
+
+function updateDragAnchor(x,y,withFeedback=true){
+  const next=dragAnchorAt(x,y,drag.piece.shape);
+  const valid=!!next&&canPlace(drag.piece.shape,next.r,next.c);
+  const clears=valid&&previewCompletionStats(drag.piece.shape,next.r,next.c).combos>0;
+  if(withFeedback&&drag.isTouch){
+    if(clears&&!drag.clearingPreview)vibrate([8,16,8]);
+    else if(valid&&!drag.anchorValid)vibrate(7);
+  }
+  drag.anchorValid=valid;
+  drag.clearingPreview=clears;
+  anchor=next;
 }
 
 function shapeKey(shape){
@@ -2829,7 +2853,7 @@ function onDown(e){
   if(pi>=0){
     // Calcula offset do toque dentro do slot da peça
     const sx=PAD+pi*(SLOT_W+GAP), sy=Y_TRAY;
-    drag={idx:pi,piece:pieces[pi],tx:x,ty:y,sx:x,sy:y,moved:false,isTouch:!!(e.touches||e.changedTouches),
+    drag={idx:pi,piece:pieces[pi],tx:x,ty:y,sx:x,sy:y,moved:false,isTouch:!!(e.touches||e.changedTouches),anchorValid:false,clearingPreview:false,
       ox:x-sx-SLOT_W/2,
       oy:y-sy-SLOT_W/2
     };
@@ -2853,7 +2877,7 @@ function onMove(e){
   if(Math.hypot(x-drag.sx,y-drag.sy)>10)drag.moved=true;
   const pos=dragPosition(x,y);
   drag.tx=pos.x;drag.ty=pos.y;
-  anchor=overGrid(pos.x,pos.y)?calcAnchor(pos.x,pos.y,drag.piece.shape):null;
+  updateDragAnchor(pos.x,pos.y);
 }
 document.addEventListener('touchend',onUp,{passive:false});
 document.addEventListener('mouseup',onUp);
@@ -2864,7 +2888,7 @@ function onUp(e){
     drag.moved=true;
     const pos=dragPosition(x,y);
     drag.tx=pos.x;drag.ty=pos.y;
-    anchor=overGrid(pos.x,pos.y)?calcAnchor(pos.x,pos.y,drag.piece.shape):null;
+    updateDragAnchor(pos.x,pos.y,false);
   }
   if(!drag.moved&&!anchor){
     rotateTrayPiece(drag.idx);

@@ -38,7 +38,7 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
-  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.2.7-beta'"));
+  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.2.8-beta'"));
   ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem botao de diagnostico beta', html.includes('id="btn-copy-diagnostics"'));
   ok('HTML copia diagnostico beta', html.includes('function copyBetaDiagnostics()') && html.includes('function betaDiagnosticsText()'));
@@ -92,7 +92,11 @@ function validateHtml(html) {
   ok('Alvos de toque ficam centralizados nos icones', html.includes('(hitW-scaledW)/2') && html.includes('(hitH-scaledH)/2'));
   ok('Peca sobe acima do dedo no celular', html.includes('const TOUCH_DRAG_LIFT=58') && html.includes('function dragPosition(x,y)'));
   ok('Elevacao se aplica apenas ao toque', html.includes('drag.isTouch&&drag.moved') && html.includes('isTouch:!!(e.touches||e.changedTouches)'));
-  ok('Preview usa a posicao elevada', html.includes('anchor=overGrid(pos.x,pos.y)?calcAnchor(pos.x,pos.y'));
+  ok('Preview usa a posicao elevada', html.includes('drag.tx=pos.x;drag.ty=pos.y') && html.includes('updateDragAnchor(pos.x,pos.y)'));
+  ok('Toque tem assistencia magnetica nas bordas', html.includes('const TOUCH_SNAP_MARGIN=18') && html.includes('function dragAnchorAt(x,y,shape)'));
+  ok('Assistencia magnetica nao altera o mouse', html.includes('if(!drag||!drag.isTouch)return next'));
+  ok('Encaixe valido tem retorno tatil', html.includes('function updateDragAnchor(x,y,withFeedback=true)') && html.includes('withFeedback&&drag.isTouch') && html.includes('valid&&!drag.anchorValid'));
+  ok('Preview de linha tem retorno tatil distinto', html.includes('clears&&!drag.clearingPreview') && html.includes('vibrate([8,16,8])'));
   validateMobileContracts(html);
 
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(match => match[1]).join('\n');
