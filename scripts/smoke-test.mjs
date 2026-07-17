@@ -38,7 +38,7 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
-  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.3.1-beta'"));
+  ok('HTML tem versao beta centralizada', /const APP_VERSION='\d+\.\d+\.\d+-beta'/.test(html));
   ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem botao de diagnostico beta', html.includes('id="btn-copy-diagnostics"'));
   ok('HTML copia diagnostico beta', html.includes('function copyBetaDiagnostics()') && html.includes('function betaDiagnosticsText()'));
@@ -104,7 +104,16 @@ function validateHtml(html) {
   ok('Linhas consecutivas criam sequencia', html.includes('consecutiveCombos++') && html.includes('consecutiveCombos-1)*10'));
   ok('Bonus de sequencia tem limite', html.includes('Math.min(40,Math.max(0,consecutiveCombos-1)*10)'));
   ok('Jogada sem linha encerra a sequencia', html.includes('if(!cleared&&!inRainMode)consecutiveCombos=0'));
-  ok('Preview inclui bonus da proxima sequencia', html.includes('Math.min(40,consecutiveCombos*10)') && html.includes('return {cells,combos,gain,chainBonus}'));
+  ok('Preview inclui bonus da proxima sequencia', html.includes('Math.min(40,consecutiveCombos*10)') && html.includes('return {cells,combos,matches,squares:squares.length,gain,chainBonus}'));
+  ok('Folego BR inicia na primeira jogada', html.includes('function startBreath()') && html.includes('startBreath();\n    addBreath(BREATH_PIECE_BONUS_MS'));
+  ok('Folego BR encerra a partida', html.includes("showGameOver('O Fôlego BR acabou')") && html.includes("'Tempo esgotado!'"));
+  ok('Folego BR pausa em telas e app oculto', html.includes('function breathShouldPause()') && html.includes('breathEndsAt+=Math.max(0,ts-breathPausedAt)'));
+  ok('Folego BR alerta nos segundos finais', html.includes('remaining<=10000') && html.includes("playTone(seconds<=5?880:660"));
+  ok('Linhas e quadrados recuperam folego', html.includes('combos*BREATH_LINE_BONUS_MS+squareCount*BREATH_SQUARE_BONUS_MS'));
+  ok('Quadrado Cultural exige figuras iguais', html.includes('function findSymbolSquares') && html.includes('state[r][c+1]!==color'));
+  ok('Quadrado Cultural combina colocacoes diferentes', html.includes('indices.every(index=>newCells.has(index))'));
+  ok('Quadrado Cultural aparece na previa', html.includes('previewClearSquares=previewStats.squares') && html.includes('Quadro x${previewClearSquares}'));
+  ok('Quadrado Cultural tem conquista', html.includes("id:'first_square'") && html.includes('symbolSquares||0'));
   ok('Nova missao zera sequencia de combos', html.includes('bestAtRunStart=best;\n  consecutiveCombos=0;'));
   ok('Objetivo mostra sequencia ativa', html.includes('function chainStatusText()') && html.includes('Sequência x${consecutiveCombos}'));
   ok('Sequencia informa o proximo bonus', html.includes('próxima linha +${nextBonus}') && html.includes('Math.min(40,consecutiveCombos*10)'));

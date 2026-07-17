@@ -1,6 +1,6 @@
 # Bloco BR
 
-Jogo mobile de blocos com jornada pelo Brasil, perguntas regionais, desafios diários, música procedural e suporte básico a PWA.
+Jogo mobile de blocos com jornada pelo Brasil, Fôlego BR, Quadrados Culturais, perguntas regionais, desafios diários, música procedural e suporte básico a PWA.
 
 ## Link publico
 
@@ -44,7 +44,7 @@ O laboratorio de jogadores simulados executa oito perfis sobre a primeira missao
 node scripts/simulate-players.mjs --sessions 10 --seed bloco-br-beta --report SIMULATION_REPORT.md --ci
 ```
 
-O relatorio mede conclusao, quantidade de jogadas, erros provaveis, sequencias e desempenho no modo curto. Ele ajuda a encontrar regressao de equilibrio, mas nao substitui testes com pessoas reais.
+O relatorio mede conclusao, quantidade de jogadas, game over por tempo, Quadrados Culturais, erros provaveis, sequencias e desempenho no modo curto. Ele ajuda a encontrar regressao de equilibrio, mas nao substitui testes com pessoas reais.
 
 Feedback beta pode ser enviado pelo botao dentro de Configuracoes ou pela aba Issues do GitHub.
 
@@ -73,6 +73,8 @@ SIMULATION_REPORT.md    Baseline atual de equilibrio
 ## Observações
 
 - O jogo é pensado primeiro para celular em modo retrato.
+- O Fôlego BR começa na primeira jogada, recupera tempo com boas limpezas e pausa quando o app fica oculto.
+- Um Quadrado Cultural limpa quatro figuras iguais em 2x2 quando combina células de colocações diferentes.
 - O áudio depende de interação do usuário por regra dos navegadores mobile.
 - O progresso é salvo no `localStorage` do navegador.
 - O roteiro para teste beta esta em `TESTING.md`.

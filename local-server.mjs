@@ -18,10 +18,11 @@ const types = {
 
 http.createServer((req, res) => {
   const url = new URL(req.url || '/', `http://127.0.0.1:${port}`);
-  const safePath = path.normalize(decodeURIComponent(url.pathname)).replace(/^(\.\.[/\\])+/, '');
-  const target = path.join(root, safePath === '/' ? 'index.html' : safePath);
+  const requestedPath = decodeURIComponent(url.pathname).replace(/^[/\\]+/, '') || 'index.html';
+  const safePath = path.normalize(requestedPath).replace(/^(\.\.[/\\])+/, '');
+  const target = path.resolve(root, safePath);
 
-  if (!target.startsWith(root)) {
+  if (target !== root && !target.startsWith(root + path.sep)) {
     res.writeHead(403);
     res.end('Forbidden');
     return;

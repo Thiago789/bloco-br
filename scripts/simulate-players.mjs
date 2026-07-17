@@ -13,10 +13,17 @@ function readLiteral(name) {
 
 const N = Number(html.match(/const N=(\d+);/)?.[1]);
 const APP_VERSION = html.match(/const APP_VERSION='([^']+)'/)?.[1] || 'desconhecida';
+const COLORS = readLiteral('COLORS');
 const SHAPES_EASY = readLiteral('SHAPES_EASY');
 const SHAPES_MED = readLiteral('SHAPES_MED');
 const SHAPES_HARD = readLiteral('SHAPES_HARD');
 const CITIES = readLiteral('CITIES');
+const BREATH_START_MS = readLiteral('BREATH_START_MS');
+const BREATH_FIRST_MISSION_MS = readLiteral('BREATH_FIRST_MISSION_MS');
+const BREATH_MAX_MS = readLiteral('BREATH_MAX_MS');
+const BREATH_PIECE_BONUS_MS = readLiteral('BREATH_PIECE_BONUS_MS');
+const BREATH_LINE_BONUS_MS = readLiteral('BREATH_LINE_BONUS_MS');
+const BREATH_SQUARE_BONUS_MS = readLiteral('BREATH_SQUARE_BONUS_MS');
 
 const PROFILES = [
   { id: 'novato', name: 'Novato', mode: 'weighted', rotation: 0.20, errorRate: 0.16, reaction: 3200, line: 65, combo: 20, setup: 1.4, space: 0.3, risk: 8, noise: 90 },
@@ -101,11 +108,15 @@ function canPlace(board, shape, row, col) {
   return true;
 }
 
-function applyPlacement(board, shape, row, col) {
+function applyPlacement(board, shape, row, col, color = COLORS[0]) {
   const next = copyBoard(board);
+  const placed = new Set();
   for (let dr = 0; dr < shape.length; dr++) {
     for (let dc = 0; dc < shape[0].length; dc++) {
-      if (shape[dr][dc]) next[row + dr][col + dc] = 1;
+      if (shape[dr][dc]) {
+        next[row + dr][col + dc] = color;
+        placed.add((row + dr) * N + col + dc);
+      }
     }
   }
   const rows = [];
@@ -115,8 +126,18 @@ function applyPlacement(board, shape, row, col) {
   const cleared = new Set();
   rows.forEach(r => { for (let c = 0; c < N; c++) cleared.add(r * N + c); });
   cols.forEach(c => { for (let r = 0; r < N; r++) cleared.add(r * N + c); });
+  let squares = 0;
+  for (let r = 0; r < N - 1; r++) for (let c = 0; c < N - 1; c++) {
+    const symbol = next[r][c];
+    if (!symbol || next[r][c + 1] !== symbol || next[r + 1][c] !== symbol || next[r + 1][c + 1] !== symbol) continue;
+    const indices = [r * N + c, r * N + c + 1, (r + 1) * N + c, (r + 1) * N + c + 1];
+    if (!indices.some(index => placed.has(index)) || indices.every(index => placed.has(index))) continue;
+    squares++;
+    indices.forEach(index => cleared.add(index));
+  }
   for (const index of cleared) next[Math.floor(index / N)][index % N] = null;
-  return { board: next, lines: rows.length + cols.length, cleared: cleared.size };
+  const lines = rows.length + cols.length;
+  return { board: next, lines, squares, matches: lines + squares, cleared: cleared.size };
 }
 
 function occupancy(board) {
@@ -185,7 +206,7 @@ function trayHasSequence(board, tray, maxNodes = 180) {
       for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
         if (!canPlace(state, shape, r, c)) continue;
         if (--budget.left < 0) return false;
-        const next = applyPlacement(state, shape, r, c).board;
+        const next = applyPlacement(state, shape, r, c, remaining[i].color).board;
         if (search(next, rest)) return true;
       }
     }
@@ -223,12 +244,16 @@ function generateTray(state, city, rng) {
   let bestScore = -Infinity;
   for (let attempt = 0; attempt < 36; attempt++) {
     const used = new Set();
+    const usedColors = new Set();
     const tray = [];
     for (let i = 0; i < 3; i++) {
       let shape = rng.pick(pool);
       for (let tries = 0; tries < 12 && used.has(shapeKey(shape)); tries++) shape = rng.pick(pool);
       used.add(shapeKey(shape));
-      tray.push({ shape });
+      let color = rng.pick(COLORS);
+      for (let tries = 0; tries < 10 && usedColors.has(color); tries++) color = rng.pick(COLORS);
+      usedColors.add(color);
+      tray.push({ shape, color });
     }
     const candidateScore = scoreTray(state.board, tray, city, state.fase);
     if (candidateScore > bestScore) {
@@ -237,7 +262,7 @@ function generateTray(state, city, rng) {
     }
     if (candidateScore >= 80) break;
   }
-  return best || [{ shape: [[1]] }, { shape: [[1, 1]] }, { shape: [[1], [1]] }];
+  return best || [{ shape: [[1]], color: COLORS[0] }, { shape: [[1, 1]], color: COLORS[1] }, { shape: [[1], [1]], color: COLORS[2] }];
 }
 
 function enumerateMoves(state, profile, rng) {
@@ -248,10 +273,11 @@ function enumerateMoves(state, profile, rng) {
     for (const shape of shapeOrientations(piece.shape, allowRotation)) {
       for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
         if (!canPlace(state.board, shape, r, c)) continue;
-        const result = applyPlacement(state.board, shape, r, c);
+        const result = applyPlacement(state.board, shape, r, c, piece.color);
         const occ = occupancy(result.board);
         const quality = result.lines * profile.line
-          + Math.max(0, result.lines - 1) * profile.combo
+          + result.squares * profile.line * 0.85
+          + Math.max(0, result.matches - 1) * profile.combo
           + setupPotential(result.board) * profile.setup
           + largestEmptyRegion(result.board) * profile.space
           - occ * profile.risk * 10
@@ -276,12 +302,12 @@ function chooseMove(moves, profile, rng) {
 function recoverFromStuck(state, rng) {
   const firstPiece = state.pieces.findIndex(Boolean);
   if (!state.rescueUsed && firstPiece >= 0 && countMoves(state.board, [[1]]) > 0) {
-    state.pieces[firstPiece] = { shape: [[1]] };
+    state.pieces[firstPiece] = { shape: [[1]], color: state.pieces[firstPiece].color || rng.pick(COLORS) };
     state.rescueUsed = true;
     state.rescues++;
     return true;
   }
-  state.pieces = state.pieces.map(piece => piece ? { shape: rng.pick(SHAPES_EASY) } : null);
+  state.pieces = state.pieces.map(piece => piece ? { shape: rng.pick(SHAPES_EASY), color: piece.color || rng.pick(COLORS) } : null);
   if (state.pieces.some(piece => piece && countMoves(state.board, piece.shape) > 0)) {
     state.shuffles++;
     return true;
@@ -290,7 +316,11 @@ function recoverFromStuck(state, rng) {
   if (state.lives <= 0) return false;
   const playable = SHAPES_EASY.filter(shape => countMoves(state.board, shape) > 0);
   if (!playable.length) return false;
-  state.pieces = [{ shape: [[1]] }, { shape: rng.pick(playable) }, { shape: rng.pick(playable) }];
+  state.pieces = [
+    { shape: [[1]], color: COLORS[0] },
+    { shape: rng.pick(playable), color: rng.pick(COLORS) },
+    { shape: rng.pick(playable), color: rng.pick(COLORS) },
+  ];
   return true;
 }
 
@@ -306,7 +336,7 @@ function updateLevel(state, gain) {
 function missionProgress(city, move, gain) {
   if (city.goal === 'score') return gain;
   if (city.goal === 'pecas') return 1;
-  if (city.goal === 'combo') return move.result.lines > 1 ? 1 : 0;
+  if (city.goal === 'combo') return move.result.matches > 1 ? 1 : 0;
   return move.result.lines;
 }
 
@@ -321,11 +351,15 @@ function runMission(profile, cityIndex, seed, maxPlacements = 180) {
   let progress = 0;
   let placements = 0;
   let lines = 0;
+  let squares = 0;
   let comboMoves = 0;
   let chain = 0;
   let maxChain = 0;
   let invalidActions = 0;
   let maxOccupancy = 0;
+  let elapsed = 0;
+  let deadline = Infinity;
+  let timedOut = false;
 
   while (placements < maxPlacements && progress < city.target) {
     if (!state.pieces.some(Boolean)) state.pieces = generateTray(state, city, rng);
@@ -335,21 +369,35 @@ function runMission(profile, cityIndex, seed, maxPlacements = 180) {
       moves = enumerateMoves(state, profile, rng);
       if (!moves.length) break;
     }
-    if (rng() < profile.errorRate) invalidActions++;
+    const madeError = rng() < profile.errorRate;
+    if (madeError) invalidActions++;
+    if (placements > 0) {
+      elapsed += profile.reaction * (0.78 + rng() * 0.44) + (madeError ? 550 : 0);
+      if (elapsed >= deadline) {
+        timedOut = true;
+        break;
+      }
+    }
     const move = chooseMove(moves, profile, rng);
     if (!move) break;
     state.board = move.result.board;
     state.pieces[move.pieceIndex] = null;
     placements++;
     lines += move.result.lines;
-    if (move.result.lines > 1) comboMoves++;
-    if (move.result.lines > 0) chain++;
+    squares += move.result.squares;
+    if (move.result.matches > 1) comboMoves++;
+    if (move.result.matches > 0) chain++;
     else chain = 0;
     maxChain = Math.max(maxChain, chain);
-    const chainBonus = move.result.lines > 0 ? Math.min(40, Math.max(0, chain - 1) * 10) : 0;
-    const gain = move.result.lines > 0
-      ? move.result.lines * 10 + move.result.cleared + (move.result.lines > 1 ? move.result.lines * 20 : 0) + chainBonus
+    const chainBonus = move.result.matches > 0 ? Math.min(40, Math.max(0, chain - 1) * 10) : 0;
+    const gain = move.result.matches > 0
+      ? move.result.lines * 10 + move.result.squares * 40 + move.result.cleared + (move.result.lines > 1 ? move.result.lines * 20 : 0) + chainBonus
       : 0;
+    if (placements === 1) deadline = elapsed + (cityIndex === 0 ? BREATH_FIRST_MISSION_MS : BREATH_START_MS);
+    deadline = Math.min(
+      elapsed + BREATH_MAX_MS,
+      deadline + BREATH_PIECE_BONUS_MS + move.result.lines * BREATH_LINE_BONUS_MS + move.result.squares * BREATH_SQUARE_BONUS_MS,
+    );
     score += gain;
     updateLevel(state, gain);
     progress += missionProgress(city, move, gain);
@@ -358,8 +406,9 @@ function runMission(profile, cityIndex, seed, maxPlacements = 180) {
 
   return {
     cityIndex, city: city.name, completed: progress >= city.target, progress, target: city.target,
-    placements, score, lines, comboMoves, maxChain, invalidActions,
+    placements, score, lines, squares, comboMoves, maxChain, invalidActions,
     rescues: state.rescues, shuffles: state.shuffles, lives: state.lives,
+    timedOut, duration: Math.round(elapsed), breathLeft: Number.isFinite(deadline) ? Math.max(0, Math.round(deadline - elapsed)) : 0,
     maxOccupancy: Number(maxOccupancy.toFixed(3)),
   };
 }
@@ -378,7 +427,7 @@ function runRain(profile, seed) {
     const pool = poolForLevel(state.level);
     const playable = pool.filter(shape => countMoves(state.board, shape) > 0);
     if (!playable.length) break;
-    state.pieces = [{ shape: rng.pick(playable) }];
+    state.pieces = [{ shape: rng.pick(playable), color: rng.pick(COLORS) }];
     const moves = enumerateMoves(state, profile, rng);
     const move = chooseMove(moves, profile, rng);
     if (!move) break;
@@ -392,9 +441,9 @@ function runRain(profile, seed) {
     pieces++;
     lines += move.result.lines;
     score += shapeCells(move.shape);
-    if (move.result.lines > 0) {
-      score += move.result.lines * 10 + move.result.cleared + (move.result.lines > 1 ? move.result.lines * 20 : 0);
-      deadline += move.result.lines * 3000;
+    if (move.result.matches > 0) {
+      score += move.result.lines * 10 + move.result.squares * 40 + move.result.cleared + (move.result.lines > 1 ? move.result.lines * 20 : 0);
+      deadline += move.result.lines * 3000 + move.result.squares * 4000;
     }
   }
 
@@ -420,6 +469,8 @@ function aggregate(results, sessionsPerProfile, seed) {
       avgOnboardingPlacements: mean(rows.map(row => row.onboarding.placements)),
       missionCompletion: mean(rows.map(row => row.mission.completed ? 1 : 0)),
       avgMissionPlacements: mean(rows.map(row => row.mission.placements)),
+      missionTimeoutRate: mean(rows.map(row => row.mission.timedOut ? 1 : 0)),
+      avgMissionSquares: mean(rows.map(row => row.mission.squares)),
       avgInvalidActions: mean(rows.map(row => row.mission.invalidActions + row.rain.invalidActions)),
       avgMaxChain: mean(rows.map(row => row.mission.maxChain)),
       avgRainScore: mean(rows.map(row => row.rain.score)),
@@ -433,6 +484,8 @@ function aggregate(results, sessionsPerProfile, seed) {
       completion: mean(rows.map(row => row.mission.completed ? 1 : 0)),
       avgPlacements: mean(rows.map(row => row.mission.placements)),
       avgScore: mean(rows.map(row => row.mission.score)),
+      timeoutRate: mean(rows.map(row => row.mission.timedOut ? 1 : 0)),
+      avgSquares: mean(rows.map(row => row.mission.squares)),
     };
   });
   return {
@@ -445,6 +498,8 @@ function aggregate(results, sessionsPerProfile, seed) {
       onboardingCompletion: mean(results.map(row => row.onboarding.completed ? 1 : 0)),
       avgOnboardingPlacements: mean(results.map(row => row.onboarding.placements)),
       missionCompletion: mean(results.map(row => row.mission.completed ? 1 : 0)),
+      missionTimeoutRate: mean(results.map(row => row.mission.timedOut ? 1 : 0)),
+      avgMissionSquares: mean(results.map(row => row.mission.squares)),
       avgRainScore: mean(results.map(row => row.rain.score)),
       avgInvalidActions: mean(results.map(row => row.mission.invalidActions + row.rain.invalidActions)),
     },
@@ -464,6 +519,8 @@ function reportFindings(summary) {
     `- Conclusao da primeira missao: ${percent(summary.overall.onboardingCompletion)}.`,
     `- Media para concluir Fortaleza: ${summary.overall.avgOnboardingPlacements.toFixed(1)} jogadas.`,
     `- Conclusao das missoes distribuidas: ${percent(summary.overall.missionCompletion)}.`,
+    `- Partidas encerradas pelo Folego BR: ${percent(summary.overall.missionTimeoutRate)}.`,
+    `- Quadrados Culturais por missao: ${summary.overall.avgMissionSquares.toFixed(1)} em media.`,
     `- Cidade mais exigente na amostra: ${hardest?.city || 'n/a'} (${percent(hardest?.completion || 0)}).`,
     `- Cidade mais acessivel na amostra: ${easiest?.city || 'n/a'} (${percent(easiest?.completion || 0)}).`,
     `- Perfil com menor conclusao: ${weakest.name} (${percent(weakest.missionCompletion)}).`,
@@ -490,21 +547,23 @@ function markdownReport(summary) {
     '',
     '## Perfis',
     '',
-    '| Perfil | Primeira missao | Jogadas inicio | Missoes | Jogadas/missao | Acoes invalidas | Cadeia maxima | Chuva BR | Linhas Chuva |',
-    '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
-    ...summary.profiles.map(profile => `| ${profile.name} | ${percent(profile.onboardingCompletion)} | ${profile.avgOnboardingPlacements.toFixed(1)} | ${percent(profile.missionCompletion)} | ${profile.avgMissionPlacements.toFixed(1)} | ${profile.avgInvalidActions.toFixed(1)} | ${profile.avgMaxChain.toFixed(1)} | ${Math.round(profile.avgRainScore)} | ${profile.avgRainLines.toFixed(1)} |`),
+    '| Perfil | Primeira missao | Jogadas inicio | Missoes | Game over por tempo | Quadrados | Jogadas/missao | Acoes invalidas | Cadeia maxima | Chuva BR | Linhas Chuva |',
+    '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
+    ...summary.profiles.map(profile => `| ${profile.name} | ${percent(profile.onboardingCompletion)} | ${profile.avgOnboardingPlacements.toFixed(1)} | ${percent(profile.missionCompletion)} | ${percent(profile.missionTimeoutRate)} | ${profile.avgMissionSquares.toFixed(1)} | ${profile.avgMissionPlacements.toFixed(1)} | ${profile.avgInvalidActions.toFixed(1)} | ${profile.avgMaxChain.toFixed(1)} | ${Math.round(profile.avgRainScore)} | ${profile.avgRainLines.toFixed(1)} |`),
     '',
     '## Cidades',
     '',
-    '| Cidade | Amostras | Conclusao | Jogadas | Pontos |',
-    '| --- | ---: | ---: | ---: | ---: |',
-    ...summary.cities.map(city => `| ${city.city} | ${city.samples} | ${percent(city.completion)} | ${city.avgPlacements.toFixed(1)} | ${Math.round(city.avgScore)} |`),
+    '| Cidade | Amostras | Conclusao | Game over por tempo | Quadrados | Jogadas | Pontos |',
+    '| --- | ---: | ---: | ---: | ---: | ---: | ---: |',
+    ...summary.cities.map(city => `| ${city.city} | ${city.samples} | ${percent(city.completion)} | ${percent(city.timeoutRate)} | ${city.avgSquares.toFixed(1)} | ${city.avgPlacements.toFixed(1)} | ${Math.round(city.avgScore)} |`),
     '',
     '## Interpretacao',
     '',
     '- Taxas muito altas em todos os perfis podem indicar missoes sem tensao.',
     '- Taxas muito baixas para Novato e Impaciente indicam atrito na entrada.',
     '- Diferenca entre perfis e desejavel: habilidade deve melhorar o resultado.',
+    '- Game over por tempo deve criar tensao sem dominar as derrotas de novatos.',
+    '- Quadrados Culturais muito raros indicam que a regra nao esta visivel na pratica.',
     '- Resultados de Chuva BR devem variar com velocidade e estrategia.',
     '- As conclusoes finais precisam ser confirmadas com pessoas reais.',
     '',
@@ -562,6 +621,8 @@ if (process.argv.includes('--ci')) {
   if (summary.overall.onboardingCompletion < 0.70) failures.push('primeira missao abaixo de 70%');
   if (summary.overall.avgOnboardingPlacements > 25) failures.push('primeira missao acima de 25 jogadas em media');
   if (summary.overall.missionCompletion < 0.35) failures.push('missoes distribuidas abaixo de 35%');
+  if (summary.overall.missionTimeoutRate > 0.65) failures.push('mais de 65% das missoes terminam por tempo');
+  if (summary.overall.avgMissionSquares <= 0) failures.push('Quadrado Cultural nao aparece nas simulacoes');
   if (summary.overall.avgRainScore <= 0) failures.push('Chuva BR sem pontuacao');
   if (summary.profiles.some(profile => !Number.isFinite(profile.avgMissionPlacements))) failures.push('metricas invalidas');
   if (failures.length) {

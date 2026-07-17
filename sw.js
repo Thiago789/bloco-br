@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bloco-br-v37';
+const CACHE_NAME = 'bloco-br-v38';
 const APP_SHELL = [
   './',
   './index.html',
