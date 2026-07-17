@@ -38,7 +38,7 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
-  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.2.4-beta'"));
+  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.2.5-beta'"));
   ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem botao de diagnostico beta', html.includes('id="btn-copy-diagnostics"'));
   ok('HTML copia diagnostico beta', html.includes('function copyBetaDiagnostics()') && html.includes('function betaDiagnosticsText()'));
@@ -72,6 +72,9 @@ function validateHtml(html) {
   ok('Chuva BR cria meta de revanche', html.includes('id="rain-retry"') && html.includes('Superar ${rainBest.toLocaleString'));
   ok('Entrada da Chuva BR lembra o recorde', html.includes('function updateRainPreview()') && html.includes('id="rain-preview-btn"'));
   ok('Reset limpa historico da Chuva BR', html.includes("'bbr2_rain_best','bbr2_rain_last','bbr2_rain_plays'"));
+  ok('Chuva BR pausa quando o app fica oculto', html.includes('function handleGameVisibilityChange()') && html.includes("document.addEventListener('visibilitychange',handleGameVisibilityChange)"));
+  ok('Chuva BR preserva o tempo ao retornar', html.includes('rainEndsAt+=pausedFor') && html.includes('rainDropStartedAt+=pausedFor'));
+  ok('Cronometro ignora atualizacao durante pausa', html.includes('if(!inRainMode||rainFinished||rainPausedAt)return'));
   ok('Recompensa diaria espera a primeira jogada', html.includes('pendingDailyReward=true') && html.includes('function maybeShowDeferredDailyReward()'));
   ok('Alvos flutuantes acompanham o canvas', html.includes('function syncFloatingHitAreas()') && html.includes('positionFloatingButton'));
   ok('Fim de jogo mostra progresso da missao', html.includes('id="go-mission-fill"') && html.includes('function renderGameOverInsights(city)'));

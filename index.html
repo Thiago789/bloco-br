@@ -1506,7 +1506,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.2.4-beta';
+const APP_VERSION='1.2.5-beta';
 
 let scaleX=1,scaleY=1,viewOffsetX=0,viewOffsetY=0,centeredViewport=false;
 function positionFloatingButton(id,x,y,w,h){
@@ -1582,6 +1582,7 @@ let rainPiecesPlaced=0;
 let rainLinesCleared=0;
 let rainBest=0;
 let rainPlays=0;
+let rainPausedAt=0;
 let rainFinished=false;
 let bestAtRunStart=0;
 
@@ -5580,6 +5581,7 @@ function startRainMode(){
   rainFinished=false;
   rainPiecesPlaced=0;
   rainLinesCleared=0;
+  rainPausedAt=0;
   rainEndsAt=now()+RAIN_DURATION_MS;
   try{
     rainBest=parseInt(localStorage.getItem('bbr2_rain_best'))||0;
@@ -5597,7 +5599,7 @@ function startRainMode(){
 }
 
 function updateRainMode(ts){
-  if(!inRainMode||rainFinished)return;
+  if(!inRainMode||rainFinished||rainPausedAt)return;
   const remaining=Math.max(0,rainEndsAt-ts);
   const seconds=Math.ceil(remaining/1000);
   const timeEl=document.getElementById('rain-time');
@@ -5611,6 +5613,7 @@ function finishRainMode(reason){
   if(rainFinished)return;
   rainFinished=true;
   inRainMode=false;
+  rainPausedAt=0;
   drag=null;anchor=null;pieces=[null,null,null];
   document.getElementById('rain-bar').classList.remove('show');
   const previousBest=rainBest;
@@ -5658,7 +5661,7 @@ function finishRainMode(reason){
 }
 
 function exitRainMode(){
-  inRainMode=false;rainFinished=true;drag=null;anchor=null;
+  inRainMode=false;rainFinished=true;rainPausedAt=0;drag=null;anchor=null;
   document.getElementById('rain-bar').classList.remove('show');
   document.getElementById('ov-rain-result').classList.remove('show');
   initGame();
@@ -5669,6 +5672,23 @@ function leaveRainResult(){
   document.getElementById('ov-rain-result').classList.remove('show');
   initGame();
 }
+
+function handleGameVisibilityChange(){
+  if(document.hidden){
+    if(inRainMode&&!rainFinished&&!rainPausedAt)rainPausedAt=now();
+    return;
+  }
+  if(!rainPausedAt)return;
+  const pausedFor=Math.max(0,now()-rainPausedAt);
+  rainPausedAt=0;
+  if(inRainMode&&!rainFinished){
+    rainEndsAt+=pausedFor;
+    rainDropStartedAt+=pausedFor;
+    updateRainMode(now());
+    setMsg('Tempo preservado. Continue!','info',1400);
+  }
+}
+document.addEventListener('visibilitychange',handleGameVisibilityChange);
 
 function startDailyChallenge(){
   if(dailyChallenge.completed) return;
