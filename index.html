@@ -1510,7 +1510,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.2.9-beta';
+const APP_VERSION='1.3.0-beta';
 
 let scaleX=1,scaleY=1,viewOffsetX=0,viewOffsetY=0,centeredViewport=false;
 function positionFloatingButton(id,x,y,w,h){
@@ -1599,6 +1599,7 @@ function resetMissionRunStats(){
 }
 function beginMissionRun(){
   bestAtRunStart=best;
+  consecutiveCombos=0;
   resetMissionRunStats();
 }
 
@@ -2941,8 +2942,9 @@ function previewCompletionStats(shape,r,c){
   let combos=0;
   for(let rr0=0;rr0<N;rr0++)if(next[rr0].every(v=>v))combos++;
   for(let cc=0;cc<N;cc++)if(next.every(row=>row[cc]))combos++;
-  const gain=combos>0?combos*10+cells.size+(combos>1?combos*20:0):0;
-  return {cells,combos,gain};
+  const chainBonus=combos>0&&!inRainMode?Math.min(40,consecutiveCombos*10):0;
+  const gain=combos>0?combos*10+cells.size+(combos>1?combos*20:0)+chainBonus:0;
+  return {cells,combos,gain,chainBonus};
 }
 function bestClearingMoveForShape(shape){
   let best=null;
@@ -2978,19 +2980,22 @@ function place(piece,r,c){
     reportMissionProgress(city,beforeGoal);
     showAlmostThere(city);
   }
-  clearLines();
+  const cleared=clearLines();
+  if(!cleared&&!inRainMode)consecutiveCombos=0;
   maybeShowDeferredDailyReward();
 }
 function clearLines(){
   const rows=[],cols=[];
   for(let r=0;r<N;r++)if(board[r].every(v=>v))rows.push(r);
   for(let c=0;c<N;c++)if(board.map(row=>row[c]).every(v=>v))cols.push(c);
-  if(!rows.length&&!cols.length)return;
+  if(!rows.length&&!cols.length)return false;
   const cleared=new Set();
   rows.forEach(r=>{for(let c=0;c<N;c++)cleared.add(r*N+c);});
   cols.forEach(c=>{for(let r=0;r<N;r++)cleared.add(r*N+c);});
   const combos=rows.length+cols.length;
-  const gain=combos*10+cleared.size+(combos>1?combos*20:0);
+  if(!inRainMode)consecutiveCombos++;
+  const chainBonus=!inRainMode?Math.min(40,Math.max(0,consecutiveCombos-1)*10):0;
+  const gain=combos*10+cleared.size+(combos>1?combos*20:0)+chainBonus;
   const coinGain=Math.floor(gain/20)+1;
 
   score+=gain; st.score=score;
@@ -3052,20 +3057,26 @@ function clearLines(){
       soundClear(combos);
       setMsg(`+${gain} pts · +3s`,'ok',1400);
     }
-    return;
+    return true;
   }
 
   if(combos>1){
     piecesWithoutCombo=0; // reset — jogador conseguiu combo
     soundCombo(combos);
     if(combos>=3)playTone(1174,'triangle',0.16,0.08,0.18);
-    toast(`🔥 Combo x${combos}! +${gain}pts +${coinGain}🪙`,'#D85A30');
+    const chainLabel=consecutiveCombos>=2?` · sequência x${consecutiveCombos}`:'';
+    toast(`🔥 Combo x${combos}${chainLabel}! +${gain}pts +${coinGain}🪙`,'#D85A30');
     floatCoin(VW/2,Y_GRID+GRID_SZ/2,`+${coinGain}🪙`);
   } else {
     piecesWithoutCombo++; // sem combo — incrementa contador
     soundClear(combos);
-    setMsg(`+${gain} pts  +${coinGain}🪙`,'ok',1400);
+    if(consecutiveCombos>=2){
+      toast(`${pickMsg(MSG_STREAK_HIGH,consecutiveCombos)} +${chainBonus} bônus`,'#D85A30');
+    }else{
+      setMsg(`+${gain} pts  +${coinGain}🪙`,'ok',1400);
+    }
   }
+  return true;
 }
 
 function checkWin(){

@@ -38,7 +38,7 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
-  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.2.9-beta'"));
+  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.3.0-beta'"));
   ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem botao de diagnostico beta', html.includes('id="btn-copy-diagnostics"'));
   ok('HTML copia diagnostico beta', html.includes('function copyBetaDiagnostics()') && html.includes('function betaDiagnosticsText()'));
@@ -101,6 +101,11 @@ function validateHtml(html) {
   ok('Simulacao considera limpeza de linhas', html.includes('function simulatePlacement(state,shape,r,c)') && html.includes('fullRows.forEach') && html.includes('fullCols.forEach'));
   ok('Bandeja segura ganha prioridade no grid cheio', html.includes("sequenceSafe?(occupancy>.45?90:28):-320"));
   ok('Busca de bandeja tem limite de desempenho', html.includes('const budget={left:maxNodes}') && html.includes('if(--budget.left<0)return false'));
+  ok('Linhas consecutivas criam sequencia', html.includes('consecutiveCombos++') && html.includes('consecutiveCombos-1)*10'));
+  ok('Bonus de sequencia tem limite', html.includes('Math.min(40,Math.max(0,consecutiveCombos-1)*10)'));
+  ok('Jogada sem linha encerra a sequencia', html.includes('if(!cleared&&!inRainMode)consecutiveCombos=0'));
+  ok('Preview inclui bonus da proxima sequencia', html.includes('Math.min(40,consecutiveCombos*10)') && html.includes('return {cells,combos,gain,chainBonus}'));
+  ok('Nova missao zera sequencia de combos', html.includes('bestAtRunStart=best;\n  consecutiveCombos=0;'));
   validateMobileContracts(html);
 
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(match => match[1]).join('\n');
