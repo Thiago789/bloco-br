@@ -1510,7 +1510,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.2.8-beta';
+const APP_VERSION='1.2.9-beta';
 
 let scaleX=1,scaleY=1,viewOffsetX=0,viewOffsetY=0,centeredViewport=false;
 function positionFloatingButton(id,x,y,w,h){
@@ -3392,6 +3392,40 @@ function countMovesForShape(shape){
   for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(canPlace(shape,r,c))count++;
   return count;
 }
+function canPlaceOn(state,shape,r,c){
+  for(let dr=0;dr<shape.length;dr++)for(let dc=0;dc<shape[0].length;dc++)if(shape[dr][dc]){
+    const nr=r+dr,nc=c+dc;
+    if(nr<0||nr>=N||nc<0||nc>=N||state[nr][nc])return false;
+  }
+  return true;
+}
+function simulatePlacement(state,shape,r,c){
+  const next=state.map(row=>row.slice());
+  shape.forEach((row,dr)=>row.forEach((v,dc)=>{if(v)next[r+dr][c+dc]=1;}));
+  const fullRows=[],fullCols=[];
+  for(let rr=0;rr<N;rr++)if(next[rr].every(Boolean))fullRows.push(rr);
+  for(let cc=0;cc<N;cc++)if(next.every(row=>row[cc]))fullCols.push(cc);
+  fullRows.forEach(rr=>{for(let cc=0;cc<N;cc++)next[rr][cc]=null;});
+  fullCols.forEach(cc=>{for(let rr=0;rr<N;rr++)next[rr][cc]=null;});
+  return next;
+}
+function trayHasPlayableSequence(tray,maxNodes=180){
+  const budget={left:maxNodes};
+  function search(state,remaining){
+    if(!remaining.length)return true;
+    for(let i=0;i<remaining.length;i++){
+      const shape=remaining[i].shape;
+      const rest=remaining.filter((_,idx)=>idx!==i);
+      for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+        if(!canPlaceOn(state,shape,r,c))continue;
+        if(--budget.left<0)return false;
+        if(search(simulatePlacement(state,shape,r,c),rest))return true;
+      }
+    }
+    return false;
+  }
+  return search(board,tray);
+}
 function scoreTray(tray,city){
   let playable=0,totalMoves=0,objectiveFit=0,smallCount=0;
   tray.forEach(p=>{
@@ -3407,7 +3441,10 @@ function scoreTray(tray,city){
   if(playable===0)return -999;
   const variety=new Set(tray.map(p=>`${p.shape.length}x${p.shape[0].length}:${p.shape.flat().join('')}`)).size;
   const earlyEase=(fase<2&&smallCount>=1)?16:0;
-  return playable*28+totalMoves*3+objectiveFit+variety*6+earlyEase;
+  const occupancy=gridOccupancy();
+  const sequenceSafe=trayHasPlayableSequence(tray);
+  const sequenceScore=sequenceSafe?(occupancy>.45?90:28):-320;
+  return playable*28+totalMoves*3+objectiveFit+variety*6+earlyEase+sequenceScore;
 }
 function makeFallbackTray(pool){
   const playable=pool.filter(shape=>countMovesForShape(shape)>0);

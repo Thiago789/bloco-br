@@ -38,7 +38,7 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
-  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.2.8-beta'"));
+  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.2.9-beta'"));
   ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem botao de diagnostico beta', html.includes('id="btn-copy-diagnostics"'));
   ok('HTML copia diagnostico beta', html.includes('function copyBetaDiagnostics()') && html.includes('function betaDiagnosticsText()'));
@@ -97,6 +97,10 @@ function validateHtml(html) {
   ok('Assistencia magnetica nao altera o mouse', html.includes('if(!drag||!drag.isTouch)return next'));
   ok('Encaixe valido tem retorno tatil', html.includes('function updateDragAnchor(x,y,withFeedback=true)') && html.includes('withFeedback&&drag.isTouch') && html.includes('valid&&!drag.anchorValid'));
   ok('Preview de linha tem retorno tatil distinto', html.includes('clears&&!drag.clearingPreview') && html.includes('vibrate([8,16,8])'));
+  ok('Geracao simula a sequencia completa da bandeja', html.includes('function trayHasPlayableSequence(tray,maxNodes=180)') && html.includes('return search(board,tray)'));
+  ok('Simulacao considera limpeza de linhas', html.includes('function simulatePlacement(state,shape,r,c)') && html.includes('fullRows.forEach') && html.includes('fullCols.forEach'));
+  ok('Bandeja segura ganha prioridade no grid cheio', html.includes("sequenceSafe?(occupancy>.45?90:28):-320"));
+  ok('Busca de bandeja tem limite de desempenho', html.includes('const budget={left:maxNodes}') && html.includes('if(--budget.left<0)return false'));
   validateMobileContracts(html);
 
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(match => match[1]).join('\n');
