@@ -38,7 +38,7 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
-  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.2.3-beta'"));
+  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.2.4-beta'"));
   ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem botao de diagnostico beta', html.includes('id="btn-copy-diagnostics"'));
   ok('HTML copia diagnostico beta', html.includes('function copyBetaDiagnostics()') && html.includes('function betaDiagnosticsText()'));
@@ -67,6 +67,11 @@ function validateHtml(html) {
   ok('Chuva BR usa uma peca por vez', html.includes('function spawnRainPiece()') && html.includes('pieces=[null,{shape,color},null]'));
   ok('Chuva BR tem cronometro e resultado', html.includes('RAIN_DURATION_MS=60000') && html.includes('function finishRainMode(reason)') && html.includes('id="ov-rain-result"'));
   ok('Linhas dao tempo no Chuva BR', html.includes('rainEndsAt+=combos*3000'));
+  ok('Chuva BR destaca novo recorde', html.includes('id="rain-result-badge"') && html.includes("badge.textContent=previousBest>0?'NOVO RECORDE':'PRIMEIRO RECORDE'"));
+  ok('Chuva BR mostra distancia do recorde', html.includes('FALTARAM ${gap.toLocaleString') && html.includes('id="rain-result-message"'));
+  ok('Chuva BR cria meta de revanche', html.includes('id="rain-retry"') && html.includes('Superar ${rainBest.toLocaleString'));
+  ok('Entrada da Chuva BR lembra o recorde', html.includes('function updateRainPreview()') && html.includes('id="rain-preview-btn"'));
+  ok('Reset limpa historico da Chuva BR', html.includes("'bbr2_rain_best','bbr2_rain_last','bbr2_rain_plays'"));
   ok('Recompensa diaria espera a primeira jogada', html.includes('pendingDailyReward=true') && html.includes('function maybeShowDeferredDailyReward()'));
   ok('Alvos flutuantes acompanham o canvas', html.includes('function syncFloatingHitAreas()') && html.includes('positionFloatingButton'));
   ok('Fim de jogo mostra progresso da missao', html.includes('id="go-mission-fill"') && html.includes('function renderGameOverInsights(city)'));

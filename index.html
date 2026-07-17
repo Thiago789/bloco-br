@@ -312,6 +312,9 @@ body[data-theme] .jp-city,body[data-theme] .jp-world-pill{background:var(--theme
 .rain-result-sub{font-size:11px;color:rgba(245,240,232,.55);margin-top:3px;}
 .rain-result-score{font:800 38px 'Baloo 2',cursive;color:#F4C430;line-height:1;margin-top:12px;}
 .rain-result-label{font-size:8px;text-transform:uppercase;letter-spacing:1px;color:rgba(245,240,232,.4);}
+.rain-result-badge{display:none;margin:10px auto 0;width:max-content;max-width:90%;padding:5px 10px;border-radius:7px;background:rgba(244,196,48,.12);border:1px solid rgba(244,196,48,.3);color:#F4C430;font-size:10px;font-weight:900;}
+.rain-result-badge.show{display:block;}
+.rain-result-message{padding:11px 16px;background:#162032;border-top:1px solid rgba(255,255,255,.06);color:rgba(245,240,232,.72);font-size:11px;font-weight:700;text-align:center;line-height:1.35;}
 .rain-result-stats{width:100%;display:grid;grid-template-columns:repeat(3,1fr);background:#162032;border-top:1px solid rgba(255,255,255,.06);}
 .rain-result-stat{padding:13px 6px;text-align:center;border-right:1px solid rgba(255,255,255,.06);}
 .rain-result-stat:last-child{border-right:none;}
@@ -962,7 +965,7 @@ body[data-theme] #settings-panel .sp-slider{background:var(--theme-cell);}
     </div>
     <div class="dc-bottom">
       <button class="dc-play-btn" id="dc-play-btn" onclick="startDailyChallenge()">🚀 Jogar Desafio</button>
-      <button class="dc-close-btn rain-preview-btn" onclick="startRainMode()">⚡ Testar Chuva BR · 60s</button>
+      <button class="dc-close-btn rain-preview-btn" id="rain-preview-btn" onclick="startRainMode()">⚡ Testar Chuva BR · 60s</button>
       <button class="dc-close-btn" onclick="closeDailyChallenge()">Fechar</button>
     </div>
   </div>
@@ -988,14 +991,16 @@ body[data-theme] #settings-panel .sp-slider{background:var(--theme-cell);}
       <div class="rain-result-sub" id="rain-result-reason">Sessão de 60 segundos</div>
       <div class="rain-result-score" id="rain-result-score">0</div>
       <div class="rain-result-label">pontos</div>
+      <div class="rain-result-badge" id="rain-result-badge"></div>
     </div>
     <div class="rain-result-stats">
       <div class="rain-result-stat"><div class="rain-result-val" id="rain-result-pieces">0</div><div class="rain-result-lbl">Peças</div></div>
       <div class="rain-result-stat"><div class="rain-result-val" id="rain-result-lines">0</div><div class="rain-result-lbl">Linhas</div></div>
       <div class="rain-result-stat"><div class="rain-result-val" id="rain-result-best">0</div><div class="rain-result-lbl">Recorde</div></div>
     </div>
+    <div class="rain-result-message" id="rain-result-message">Sua próxima meta aparecerá aqui.</div>
     <div class="rain-result-actions">
-      <button class="rain-retry" onclick="startRainMode()">Jogar novamente</button>
+      <button class="rain-retry" id="rain-retry" onclick="startRainMode()">Jogar novamente</button>
       <button class="rain-leave" onclick="leaveRainResult()">Voltar para a jornada</button>
     </div>
   </div>
@@ -1501,7 +1506,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.2.3-beta';
+const APP_VERSION='1.2.4-beta';
 
 let scaleX=1,scaleY=1,viewOffsetX=0,viewOffsetY=0,centeredViewport=false;
 function positionFloatingButton(id,x,y,w,h){
@@ -1576,6 +1581,7 @@ let rainDropStartedAt=0;
 let rainPiecesPlaced=0;
 let rainLinesCleared=0;
 let rainBest=0;
+let rainPlays=0;
 let rainFinished=false;
 let bestAtRunStart=0;
 
@@ -4830,7 +4836,8 @@ function confirmResetProgress(){
   if(confirm('Tem certeza? Todo o progresso será perdido.')){
     try{
       ['bbr2_best','bbr2_coins','bbr2_streak','bbr2_lastday','bbr2_achs',
-       'bbr2_fase','bbr2_cities','bbr2_city_stars','bbr2_dc_current','bbr2_dc_streak','bbr2_team','bbr2_tutorial_done'].forEach(k=>{
+       'bbr2_fase','bbr2_cities','bbr2_city_stars','bbr2_dc_current','bbr2_dc_streak','bbr2_team','bbr2_tutorial_done',
+       'bbr2_rain_best','bbr2_rain_last','bbr2_rain_plays'].forEach(k=>{
         localStorage.removeItem(k);
       });
     }catch(e){}
@@ -5534,9 +5541,20 @@ function renderDailyChallenge(){
     btn.className = 'dc-play-btn';
     btn.onclick = startDailyChallenge;
   }
+  updateRainPreview();
 }
 
 const RAIN_DURATION_MS=60000;
+function updateRainPreview(){
+  const btn=document.getElementById('rain-preview-btn');
+  if(!btn)return;
+  let savedBest=rainBest;
+  try{savedBest=Math.max(savedBest,parseInt(localStorage.getItem('bbr2_rain_best'))||0);}catch(e){}
+  btn.textContent=savedBest>0
+    ? `⚡ Chuva BR · Recorde ${savedBest.toLocaleString('pt-BR')}`
+    : '⚡ Testar Chuva BR · 60s';
+}
+
 function spawnRainPiece(){
   if(!inRainMode)return;
   const pool=getShapePool();
@@ -5563,7 +5581,10 @@ function startRainMode(){
   rainPiecesPlaced=0;
   rainLinesCleared=0;
   rainEndsAt=now()+RAIN_DURATION_MS;
-  try{rainBest=parseInt(localStorage.getItem('bbr2_rain_best'))||0;}catch(e){rainBest=0;}
+  try{
+    rainBest=parseInt(localStorage.getItem('bbr2_rain_best'))||0;
+    rainPlays=parseInt(localStorage.getItem('bbr2_rain_plays'))||0;
+  }catch(e){rainBest=0;rainPlays=0;}
   board=Array.from({length:N},()=>Array(N).fill(null));
   score=0;lives=1;goal=0;bombMode=false;drag=null;anchor=null;
   particles=[];flashCells=[];floatingTexts=[];stars=[];
@@ -5592,13 +5613,46 @@ function finishRainMode(reason){
   inRainMode=false;
   drag=null;anchor=null;pieces=[null,null,null];
   document.getElementById('rain-bar').classList.remove('show');
+  const previousBest=rainBest;
+  const isNewRecord=score>previousBest;
   rainBest=Math.max(rainBest,score);
-  try{localStorage.setItem('bbr2_rain_best',rainBest);}catch(e){}
+  rainPlays++;
+  try{
+    localStorage.setItem('bbr2_rain_best',rainBest);
+    localStorage.setItem('bbr2_rain_last',score);
+    localStorage.setItem('bbr2_rain_plays',rainPlays);
+  }catch(e){}
   document.getElementById('rain-result-reason').textContent=reason;
   document.getElementById('rain-result-score').textContent=score.toLocaleString('pt-BR');
   document.getElementById('rain-result-pieces').textContent=rainPiecesPlaced;
   document.getElementById('rain-result-lines').textContent=rainLinesCleared;
   document.getElementById('rain-result-best').textContent=rainBest.toLocaleString('pt-BR');
+  const badge=document.getElementById('rain-result-badge');
+  const message=document.getElementById('rain-result-message');
+  const retry=document.getElementById('rain-retry');
+  badge.classList.add('show');
+  if(isNewRecord){
+    badge.textContent=previousBest>0?'NOVO RECORDE':'PRIMEIRO RECORDE';
+    message.textContent=previousBest>0
+      ? `Você superou sua melhor marca em ${(score-previousBest).toLocaleString('pt-BR')} pontos.`
+      : 'Sua primeira marca está registrada. Agora existe um número para perseguir.';
+  }else if(score===rainBest&&rainBest>0){
+    badge.textContent='RECORDE IGUALADO';
+    message.textContent='Você repetiu sua melhor marca. Mais uma linha pode decidir a próxima tentativa.';
+  }else if(rainBest>0){
+    const gap=rainBest-score;
+    badge.textContent=`FALTARAM ${gap.toLocaleString('pt-BR')} PTS`;
+    message.textContent=gap<=50
+      ? 'Foi por pouco. Uma jogada mais rápida pode virar esse resultado.'
+      : `Seu alvo continua em ${rainBest.toLocaleString('pt-BR')} pontos.`;
+  }else{
+    badge.textContent='TENTATIVA CONCLUÍDA';
+    message.textContent='Complete linhas para abrir seu primeiro recorde.';
+  }
+  retry.textContent=rainBest>0
+    ? `Superar ${rainBest.toLocaleString('pt-BR')} pontos`
+    : 'Tentar meu primeiro recorde';
+  updateRainPreview();
   document.getElementById('ov-rain-result').classList.add('show');
   soundGameOver();
 }
