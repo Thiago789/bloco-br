@@ -15,11 +15,12 @@ https://thiago789.github.io/bloco-br/
 7. Verificar se pecas, linhas e Quadrados Culturais recuperam tempo.
 8. Formar um 2x2 de figuras iguais usando mais de uma colocacao.
 9. Jogar ate completar ou perder uma missao.
-10. Testar o quiz regional quando aparecer.
-11. Fechar e abrir de novo para conferir se progresso/moedas continuam salvos.
-12. Usar a opcao "Adicionar a tela inicial" e abrir como app.
-13. Abrir Configuracoes e usar "Copiar dados beta" antes de enviar um relato.
-14. Usar "Enviar feedback beta" para registrar a experiencia.
+10. Tocar em repetir/tentar novamente e conferir se a nova partida inicia normalmente.
+11. Testar o quiz regional quando aparecer.
+12. Fechar e abrir de novo para conferir se progresso/moedas continuam salvos.
+13. Usar a opcao "Adicionar a tela inicial" e abrir como app.
+14. Abrir Configuracoes e usar "Copiar dados beta" antes de enviar um relato; o resumo deve incluir partidas e replays locais.
+15. Usar "Enviar feedback beta" para registrar a experiencia.
 
 ## Teste automatico antes de enviar feedback
 
@@ -56,6 +57,7 @@ O laboratorio testa regras e equilibrio provavel. Diversao, clareza percebida, a
 - A musica ficou agradavel ou repetitiva?
 - A primeira missao ficou clara?
 - O relogio criou tensao ou pareceu injusto?
+- Os sons dos ultimos dez segundos ajudaram ou incomodaram?
 - Voce percebeu como formar um Quadrado Cultural?
 - O jogo parece facil, dificil ou confuso nos primeiros 3 minutos?
 - A vontade foi de jogar mais uma partida?

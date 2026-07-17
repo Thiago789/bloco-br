@@ -1511,13 +1511,14 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.4.0-beta';
+const APP_VERSION='1.4.1-beta';
 const BREATH_START_MS=45000;
 const BREATH_FIRST_MISSION_MS=60000;
 const BREATH_MAX_MS=60000;
 const BREATH_PIECE_BONUS_MS=1000;
 const BREATH_LINE_BONUS_MS=4000;
 const BREATH_SQUARE_BONUS_MS=6000;
+const BETA_METRICS_KEY='bbr2_beta_metrics_v1';
 
 let scaleX=1,scaleY=1,viewOffsetX=0,viewOffsetY=0,centeredViewport=false;
 function positionFloatingButton(id,x,y,w,h){
@@ -1603,6 +1604,8 @@ let breathPausedAt=0;
 let breathFinished=false;
 let breathLastSecond=60;
 let gameOverReason='Sem encaixes';
+let missionRunStartedAt=0;
+let missionRunRecorded=false;
 
 // Stats da partida (para conquistas)
 let st={score:0,combos:0,maxCombo:0,bestMoveGain:0,linesCleared:0,symbolSquares:0,level:1,streak:0,missionNoBoosters:true,missionCompleted:false,citiesCompleted:0,boostersUsedThisMission:0,dcPieces:0};
@@ -1613,6 +1616,9 @@ function resetMissionRunStats(){
 function beginMissionRun(){
   bestAtRunStart=best;
   consecutiveCombos=0;
+  sessionPlacements=0;
+  missionRunStartedAt=0;
+  missionRunRecorded=false;
   resetMissionRunStats();
   resetBreath();
 }
@@ -1646,6 +1652,42 @@ function getLocalDateStr(d=new Date()){
   const m=String(d.getMonth()+1).padStart(2,'0');
   const day=String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
+}
+
+function loadBetaMetrics(){
+  const empty={plays:0,wins:0,losses:0,timeouts:0,noMoves:0,replays:0,totalSeconds:0,totalPlacements:0,totalSquares:0,rescues:0,runs:[]};
+  try{return {...empty,...JSON.parse(localStorage.getItem(BETA_METRICS_KEY)||'{}')};}catch(e){return empty;}
+}
+function saveBetaMetrics(data){
+  try{localStorage.setItem(BETA_METRICS_KEY,JSON.stringify(data));}catch(e){}
+}
+function recordBetaRun(outcome,reason){
+  if(missionRunRecorded||inRainMode||inDailyMode)return;
+  missionRunRecorded=true;
+  const data=loadBetaMetrics();
+  const seconds=missionRunStartedAt?Math.max(1,Math.round((Date.now()-missionRunStartedAt)/1000)):0;
+  const run={at:Date.now(),outcome,reason,city:fase,score:score||0,seconds,placements:sessionPlacements||0,squares:st.symbolSquares||0,rescue:!!rescueUsed,replayed:false};
+  data.plays++;
+  if(outcome==='win')data.wins++;else data.losses++;
+  if(reason==='O Fôlego BR acabou')data.timeouts++;
+  if(reason==='O tabuleiro ficou sem encaixes')data.noMoves++;
+  if(rescueUsed)data.rescues++;
+  data.totalSeconds+=seconds;
+  data.totalPlacements+=run.placements;
+  data.totalSquares+=run.squares;
+  data.runs=[...(data.runs||[]),run].slice(-30);
+  saveBetaMetrics(data);
+}
+function registerBetaReplay(){
+  const data=loadBetaMetrics();
+  const last=data.runs?.[data.runs.length-1];
+  if(last&&!last.replayed){last.replayed=true;data.replays++;saveBetaMetrics(data);}
+}
+function betaMetricsSummary(){
+  const data=loadBetaMetrics();
+  const rate=data.plays?Math.round(data.replays/data.plays*100):0;
+  const avg=data.plays?Math.round(data.totalSeconds/data.plays):0;
+  return `Partidas locais: ${data.plays} | Vitorias: ${data.wins} | Replays: ${data.replays} (${rate}%) | Media: ${avg}s | Fim por tempo: ${data.timeouts} | Quadrados: ${data.totalSquares}`;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2472,6 +2514,7 @@ function resetBreath(){
 }
 function startBreath(){
   if(!breathEnabled()||breathStarted||breathFinished)return;
+  if(!missionRunStartedAt)missionRunStartedAt=Date.now();
   breathStarted=true;
   breathEndsAt=now()+breathStartDuration();
   breathLastSecond=Math.ceil(breathStartDuration()/1000);
@@ -2506,7 +2549,7 @@ function updateBreath(ts){
   if(seconds!==breathLastSecond){
     breathLastSecond=seconds;
     if(seconds<=10&&seconds>0){
-      playTone(seconds<=5?880:660,'square',0.035,0.01,0.04);
+      playBreathUrgencyCue(seconds);
       if(seconds<=5)vibrate(18);
     }
   }
@@ -2514,6 +2557,16 @@ function updateBreath(ts){
   breathFinished=true;
   drag=null;anchor=null;
   showGameOver('O Fôlego BR acabou');
+}
+
+function playBreathUrgencyCue(seconds){
+  const critical=seconds<=5;
+  playTone(critical?880:660,'square',critical?0.045:0.03,0.01,0.04);
+  if(critical&&seconds<=3)setTimeout(()=>playTone(1046,'square',0.025,0.008,0.025),150);
+  if(!settings.music||!musicPlaying||!musicGain||AC.state==='suspended')return;
+  const t=AC.currentTime;
+  playDrum(t,critical?'snare':'hihat',musicGain);
+  if(seconds<=3)playDrum(t+0.18,'kick',musicGain);
 }
 
 function drawProgress(){
@@ -2524,7 +2577,7 @@ function drawProgress(){
     const urgent=breathStarted&&remaining<=10000;
     const critical=breathStarted&&remaining<=5000;
     const bx=PAD+58,bw=218,bh=8,by=y+h/2-bh/2;
-    txt('FÔLEGO',PAD,y+h/2,9,urgent?'#FF6B35':'rgba(245,240,232,0.52)','left');
+    txt(critical?'RÁPIDO':'FÔLEGO',PAD,y+h/2,9,urgent?'#FF6B35':'rgba(245,240,232,0.52)','left');
     ctx.fillStyle='#1a2840';rr(bx,by,bw,bh,4);ctx.fill();
     if(pct>0){
       const grd=ctx.createLinearGradient(bx,0,bx+bw,0);
@@ -2537,7 +2590,7 @@ function drawProgress(){
       ctx.strokeStyle=critical?'#e24b4a':'#FF6B35';ctx.lineWidth=2;
       rr(bx-2,by-2,bw+4,bh+4,6);ctx.stroke();ctx.globalAlpha=1;
     }
-    const label=breathStarted?`${Math.ceil(remaining/1000)}s`:'pronto';
+    const label=critical?`${Math.ceil(remaining/1000)}s!`:breathStarted?`${Math.ceil(remaining/1000)}s`:'pronto';
     txt(label,bx+bw+7,y+h/2,10,urgent?'#FF6B35':'#00E5CC','left','Baloo 2');
     ['❤️','❤️','❤️'].forEach((heart,i)=>{
       ctx.globalAlpha=i<lives?1:0.18;
@@ -3054,6 +3107,13 @@ function findSymbolSquares(state,newCells=new Set()){
   }
   return squares;
 }
+function teachFirstSymbolSquare(){
+  try{
+    if(localStorage.getItem('bbr2_square_lesson'))return;
+    localStorage.setItem('bbr2_square_lesson','1');
+  }catch(e){}
+  setMsg('Quadrado Cultural: um 2x2 de figuras iguais limpa o quadro e recupera +6s.','ok',4800);
+}
 function previewCompletionStats(shape,r,c,color=COLORS[0]){
   const next=board.map(row=>row.slice());
   const newCells=new Set();
@@ -3234,6 +3294,7 @@ function clearLines(placedCells=new Set()){
       setMsg(`+${gain} pts  +${coinGain}🪙`,'ok',1400);
     }
   }
+  if(squareCount)teachFirstSymbolSquare();
   return true;
 }
 
@@ -3251,6 +3312,7 @@ function checkWin(){
   while(xp>=xpNext){xp-=xpNext;level++;xpNext=Math.floor(xpNext*1.3);st.level=level;}
   st.missionCompleted=true;
   if(st.boostersUsedThisMission===0)st.missionNoBoosters=true;
+  recordBetaRun('win','Missão concluída');
   saveData(); checkAchievements();
   soundWinStinger();
 
@@ -3326,6 +3388,7 @@ function showGameOver(reason='Sem encaixes'){
   if(document.getElementById('ov-lose').classList.contains('show'))return;
   gameOverReason=reason;
   breathFinished=true;
+  recordBetaRun('loss',reason);
   const city=CITIES[Math.min(fase,CITIES.length-1)];
   const isNewBest=score>bestAtRunStart&&score>0;
   document.getElementById('go-title').textContent=reason==='O Fôlego BR acabou'?'Tempo esgotado!':'Fim de Jogo!';
@@ -3504,6 +3567,7 @@ document.getElementById('btn-rewarded').addEventListener('click',()=>{
   });
 });
 document.getElementById('btn-replay-win').addEventListener('click',()=>{
+  registerBetaReplay();
   clearInterval(confettiTimer);
   document.getElementById('ov-win').classList.remove('show');
   closeRegionQuiz();
@@ -3516,6 +3580,7 @@ document.getElementById('btn-replay-win').addEventListener('click',()=>{
   spawnPieces();setMsg('Repetindo a missão! 💪','info',2000);
 });
 document.getElementById('btn-retry').addEventListener('click',()=>{
+  registerBetaReplay();
   document.getElementById('ov-lose').classList.remove('show');
   closeRegionQuiz();
   activeRegionQuiz=null;regionQuizAnswered=false;regionQuizMode='bonus';
@@ -3706,6 +3771,7 @@ function initGame(){
   loadDailyChallenge();
   renderAppVersion();
   st.level=level;
+  beginMissionRun();
   if(shouldUseOpeningTray()){
     pieces=openingTray();
     maybeShowOpeningAssist();
@@ -4682,8 +4748,8 @@ const TUT_STEPS=[
     nextLabel:'Ótimo! →',
   },
   {
-    title:'Complete linhas! 🔥',
-    text:'Preencha uma linha ou coluna inteira para eliminar e ganhar pontos. Combos valem mais!',
+    title:'Linhas e Quadrados! 🔥',
+    text:'Complete uma linha ou forme um 2x2 de figuras iguais. O Quadrado Cultural limpa peças e devolve tempo!',
     step:'Pontuação · 5/5',
     highlight:'grid',
     arrow:null,
@@ -5007,6 +5073,7 @@ function openBetaFeedback(){
     `- Fase: ${fase+1}/${CITIES.length}`,
     `- Pontos: ${score||0}`,
     `- Nivel: ${level||1}`,
+    `- ${betaMetricsSummary()}`,
     `- Link: ${location.href}`
   ].join('\n'));
   const url=`https://github.com/Thiago789/bloco-br/issues/new?title=${title}&body=${body}`;
@@ -5027,6 +5094,7 @@ function betaDiagnosticsText(){
     `Tema: ${settings.theme||'dark'}`,
     `Musica: ${settings.music?'on':'off'}`,
     `Sons: ${settings.sound?'on':'off'}`,
+    betaMetricsSummary(),
     `Tela: ${window.innerWidth}x${window.innerHeight}`,
     `Navegador: ${navigator.userAgent}`,
     `Link: ${location.href}`

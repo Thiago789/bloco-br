@@ -74,7 +74,9 @@ SIMULATION_REPORT.md    Baseline atual de equilibrio
 
 - O jogo é pensado primeiro para celular em modo retrato.
 - O Fôlego BR começa na primeira jogada, recupera tempo com boas limpezas e pausa quando o app fica oculto.
+- Os dez segundos finais usam pulsação, som e percussão progressivos para comunicar urgência.
 - Um Quadrado Cultural limpa quatro figuras iguais em 2x2 quando combina células de colocações diferentes.
+- Partidas, vitórias, derrotas, duração e replays são medidos somente no `localStorage` e aparecem nos dados beta copiados pelo jogador.
 - O áudio depende de interação do usuário por regra dos navegadores mobile.
 - O progresso é salvo no `localStorage` do navegador.
 - O roteiro para teste beta esta em `TESTING.md`.

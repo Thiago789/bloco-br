@@ -107,13 +107,16 @@ function validateHtml(html) {
   ok('Preview inclui bonus da proxima sequencia', html.includes('Math.min(40,consecutiveCombos*10)') && html.includes('return {cells,combos,matches,squares:squares.length,gain,chainBonus}'));
   ok('Folego BR inicia na primeira jogada', html.includes('function startBreath()') && html.includes('startBreath();\n    addBreath(BREATH_PIECE_BONUS_MS'));
   ok('Folego BR encerra a partida', html.includes("showGameOver('O Fôlego BR acabou')") && html.includes("'Tempo esgotado!'"));
+  ok('Urgencia do Folego ganha cadencia audiovisual', html.includes('function playBreathUrgencyCue(seconds)') && html.includes("playDrum(t,critical?'snare':'hihat',musicGain)") && html.includes("critical?'RÁPIDO':'FÔLEGO'"));
   ok('Folego BR pausa em telas e app oculto', html.includes('function breathShouldPause()') && html.includes('breathEndsAt+=Math.max(0,ts-breathPausedAt)'));
-  ok('Folego BR alerta nos segundos finais', html.includes('remaining<=10000') && html.includes("playTone(seconds<=5?880:660"));
+  ok('Folego BR alerta nos segundos finais', html.includes('remaining<=10000') && html.includes('playBreathUrgencyCue(seconds)'));
   ok('Linhas e quadrados recuperam folego', html.includes('combos*BREATH_LINE_BONUS_MS+squareCount*BREATH_SQUARE_BONUS_MS'));
   ok('Quadrado Cultural exige figuras iguais', html.includes('function findSymbolSquares') && html.includes('state[r][c+1]!==color'));
   ok('Quadrado Cultural combina colocacoes diferentes', html.includes('indices.every(index=>newCells.has(index))'));
   ok('Quadrado Cultural aparece na previa', html.includes('previewClearSquares=previewStats.squares') && html.includes('Quadro x${previewClearSquares}'));
   ok('Quadrado Cultural tem conquista', html.includes("id:'first_square'") && html.includes('symbolSquares||0'));
+  ok('Primeiro Quadrado Cultural ensina a regra', html.includes('function teachFirstSymbolSquare()') && html.includes("localStorage.setItem('bbr2_square_lesson','1')"));
+  ok('Metricas locais registram partida e replay', html.includes("const BETA_METRICS_KEY='bbr2_beta_metrics_v1'") && html.includes("recordBetaRun('win','Missão concluída')") && html.includes('registerBetaReplay();'));
   ok('Nova missao zera sequencia de combos', html.includes('bestAtRunStart=best;\n  consecutiveCombos=0;'));
   ok('Objetivo mostra sequencia ativa', html.includes('function chainStatusText()') && html.includes('Sequência x${consecutiveCombos}'));
   ok('Sequencia informa o proximo bonus', html.includes('próxima linha +${nextBonus}') && html.includes('Math.min(40,consecutiveCombos*10)'));
