@@ -38,7 +38,7 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
-  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.2.1-beta'"));
+  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.2.2-beta'"));
   ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem botao de diagnostico beta', html.includes('id="btn-copy-diagnostics"'));
   ok('HTML copia diagnostico beta', html.includes('function copyBetaDiagnostics()') && html.includes('function betaDiagnosticsText()'));
@@ -69,6 +69,11 @@ function validateHtml(html) {
   ok('Linhas dao tempo no Chuva BR', html.includes('rainEndsAt+=combos*3000'));
   ok('Recompensa diaria espera a primeira jogada', html.includes('pendingDailyReward=true') && html.includes('function maybeShowDeferredDailyReward()'));
   ok('Alvos flutuantes acompanham o canvas', html.includes('function syncFloatingHitAreas()') && html.includes('positionFloatingButton'));
+  ok('Fim de jogo mostra progresso da missao', html.includes('id="go-mission-fill"') && html.includes('function renderGameOverInsights(city)'));
+  ok('Fim de jogo explica quanto faltou', html.includes('function gameOverMissionMessage(city)') && html.includes('Foi por pouco'));
+  ok('Fim de jogo destaca melhor jogada', html.includes('bestMoveGain') && html.includes('id="go-best-move"'));
+  ok('Revanche zera estatisticas da rodada', html.includes('function resetMissionRunStats()') && html.includes('score=0;lives=3;goal=0'));
+  ok('Revanche e a acao principal', html.includes('↺ Tentar bater meu recorde') && html.includes('.go-btn-retry{order:-3'));
   validateMobileContracts(html);
 
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(match => match[1]).join('\n');

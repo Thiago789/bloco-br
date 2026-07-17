@@ -506,7 +506,8 @@ body[data-theme] #settings-panel .sp-btn-close{background:var(--theme-accent);}
 body[data-theme] #settings-panel .sp-slider{background:var(--theme-cell);}
 
 /* ── GAME OVER MELHORADO ── */
-#ov-lose .ov{max-width:340px;width:92%;padding:0;overflow:hidden;}
+#ov-lose .ov{max-width:340px;width:92%;padding:0;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;}
+#ov-lose .ov *{touch-action:auto;}
 .go-header{padding:24px 24px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;background:linear-gradient(135deg,#1a0a0a,#2a1010);}
 .go-emoji-big{font-size:56px;line-height:1;animation:goEmoji .5s cubic-bezier(.34,1.56,.64,1);}
 @keyframes goEmoji{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(0)}}
@@ -522,10 +523,23 @@ body[data-theme] #settings-panel .sp-slider{background:var(--theme-cell);}
 .go-compare-val{font-family:'Baloo 2',cursive;font-size:15px;font-weight:800;}
 .go-compare-lbl{font-size:8px;font-weight:700;color:rgba(245,240,232,.35);text-transform:uppercase;letter-spacing:.3px;}
 .go-vs{font-size:10px;font-weight:800;color:rgba(245,240,232,.2);}
+.go-mission{padding:12px 16px;background:#111d2c;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:7px;}
+.go-mission-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.go-mission-city{font-size:11px;font-weight:900;color:#f5f0e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.go-mission-pct{font:800 12px 'Baloo 2',cursive;color:#F4C430;}
+.go-mission-bar{height:6px;background:#1a2840;border-radius:4px;overflow:hidden;}
+.go-mission-fill{height:100%;width:0;background:linear-gradient(90deg,#009C3B,#F4C430);border-radius:4px;transition:width .45s ease;}
+.go-near-miss{font-size:11px;font-weight:900;color:#F4C430;line-height:1.25;}
+.go-run-highlight{display:flex;gap:8px;}
+.go-highlight-item{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:7px 8px;display:flex;flex-direction:column;gap:1px;min-width:0;}
+.go-highlight-val{font:800 13px 'Baloo 2',cursive;color:#7fb5ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.go-highlight-lbl{font-size:7px;font-weight:800;color:rgba(245,240,232,.36);text-transform:uppercase;}
 .go-actions{padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:#162032;}
 .go-btn-continue{background:linear-gradient(135deg,#F4C430,#FF9500);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;color:#000;cursor:pointer;font-family:'Nunito',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;}
 .go-btn-quiz{background:linear-gradient(135deg,#3A86FF,#7B61FF);border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:900;color:#fff;cursor:pointer;font-family:'Nunito',sans-serif;}
-.go-btn-retry{background:#009C3B;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:800;color:#fff;cursor:pointer;font-family:'Nunito',sans-serif;}
+.go-btn-retry{order:-3;background:#009C3B;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:900;color:#fff;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 7px 18px rgba(0,156,59,.22);}
+.go-btn-quiz{order:-2;}
+.go-btn-continue{order:-1;}
 .go-btn-new{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px;font-size:12px;font-weight:700;color:rgba(245,240,232,.5);cursor:pointer;font-family:'Nunito',sans-serif;}
 .go-new-record{background:linear-gradient(135deg,rgba(244,196,48,.15),rgba(255,149,0,.1));border-top:1px solid rgba(244,196,48,.2);padding:8px 16px;text-align:center;font-size:11px;font-weight:800;color:#F4C430;display:none;}
 .go-new-record.show{display:block;}
@@ -780,7 +794,7 @@ body[data-theme] #settings-panel .sp-slider{background:var(--theme-cell);}
       <div class="go-vs">VS</div>
       <div class="go-compare-item">
         <div class="go-compare-val" id="go-cmp-best" style="color:#009C3B">0</div>
-        <div class="go-compare-lbl">Seu recorde</div>
+        <div class="go-compare-lbl">Recorde anterior</div>
       </div>
       <div class="go-vs">·</div>
       <div class="go-compare-item">
@@ -788,10 +802,22 @@ body[data-theme] #settings-panel .sp-slider{background:var(--theme-cell);}
         <div class="go-compare-lbl">Moedas</div>
       </div>
     </div>
+    <div class="go-mission">
+      <div class="go-mission-top">
+        <div class="go-mission-city" id="go-mission-city">Missão atual</div>
+        <div class="go-mission-pct" id="go-mission-pct">0%</div>
+      </div>
+      <div class="go-mission-bar"><div class="go-mission-fill" id="go-mission-fill"></div></div>
+      <div class="go-near-miss" id="go-near-miss">Continue tentando.</div>
+      <div class="go-run-highlight">
+        <div class="go-highlight-item"><div class="go-highlight-val" id="go-best-move">0 pts</div><div class="go-highlight-lbl">Melhor jogada</div></div>
+        <div class="go-highlight-item"><div class="go-highlight-val" id="go-best-combo">x0</div><div class="go-highlight-lbl">Maior combo</div></div>
+      </div>
+    </div>
     <div class="go-actions">
       <button class="go-btn-continue" id="btn-rewarded">🎁 Continuar com vídeo (+1 vida)</button>
       <button class="go-btn-quiz" id="btn-quiz-rescue">Responder pergunta (+1 vida)</button>
-      <button class="go-btn-retry" id="btn-retry">↺ Tentar novamente</button>
+      <button class="go-btn-retry" id="btn-retry">↺ Tentar bater meu recorde</button>
       <button class="go-btn-new" id="btn-new">Nova jornada</button>
     </div>
   </div>
@@ -1475,7 +1501,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.2.1-beta';
+const APP_VERSION='1.2.2-beta';
 
 let scaleX=1,scaleY=1;
 function positionFloatingButton(id,x,y,w,h){
@@ -1539,9 +1565,18 @@ let rainPiecesPlaced=0;
 let rainLinesCleared=0;
 let rainBest=0;
 let rainFinished=false;
+let bestAtRunStart=0;
 
 // Stats da partida (para conquistas)
-let st={score:0,combos:0,maxCombo:0,linesCleared:0,level:1,streak:0,missionNoBoosters:true,missionCompleted:false,citiesCompleted:0,boostersUsedThisMission:0,dcPieces:0};
+let st={score:0,combos:0,maxCombo:0,bestMoveGain:0,linesCleared:0,level:1,streak:0,missionNoBoosters:true,missionCompleted:false,citiesCompleted:0,boostersUsedThisMission:0,dcPieces:0};
+function resetMissionRunStats(){
+  st.score=0;st.combos=0;st.maxCombo=0;st.bestMoveGain=0;st.linesCleared=0;st.dcPieces=0;
+  st.boostersUsedThisMission=0;st.missionNoBoosters=true;st.missionCompleted=false;
+}
+function beginMissionRun(){
+  bestAtRunStart=best;
+  resetMissionRunStats();
+}
 
 // Partículas de animação
 let particles=[];
@@ -2904,6 +2939,7 @@ function clearLines(){
   score+=gain; st.score=score;
   st.combos++; st.linesCleared+=rows.length+cols.length;
   st.maxCombo=Math.max(st.maxCombo,combos);
+  st.bestMoveGain=Math.max(st.bestMoveGain||0,gain);
   if(inRainMode){
     rainLinesCleared+=combos;
     rainEndsAt+=combos*3000;
@@ -2993,7 +3029,7 @@ function checkWin(){
   soundWinStinger();
 
   // Preencher tela de vitória reformulada (v11+)
-  const isWinNewBest=score>=best&&score>0;
+  const isWinNewBest=score>bestAtRunStart&&score>0;
   const nextCity=CITIES[Math.min(fase+1,CITIES.length-1)];
   const isLastCity=fase>=CITIES.length-1;
   document.getElementById('win-city-icon').textContent=city.icon;
@@ -3039,6 +3075,27 @@ function checkWin(){
   }
 }
 
+function gameOverMissionMessage(city){
+  const remaining=Math.max(0,city.target-goal);
+  if(remaining<=0)return 'Missão concluída. Você chegou ao objetivo!';
+  const unit=objectiveUnit(city,remaining);
+  const closeLimit=Math.max(1,Math.ceil(city.target*.25));
+  if(remaining<=closeLimit){
+    return `Foi por pouco: ${remaining===1?'faltou':'faltaram'} ${remaining} ${unit}.`;
+  }
+  return `${remaining===1?'Faltou':'Faltaram'} ${remaining} ${unit} para avançar.`;
+}
+
+function renderGameOverInsights(city){
+  const pct=Math.round(missionProgressRatio(city)*100);
+  document.getElementById('go-mission-city').textContent=`${city.icon} ${city.name}`;
+  document.getElementById('go-mission-pct').textContent=pct+'%';
+  document.getElementById('go-mission-fill').style.width=pct+'%';
+  document.getElementById('go-near-miss').textContent=gameOverMissionMessage(city);
+  document.getElementById('go-best-move').textContent=(st.bestMoveGain||0)>0?`+${st.bestMoveGain} pts`:'Sem linha';
+  document.getElementById('go-best-combo').textContent=(st.maxCombo||0)>1?`x${st.maxCombo}`:'Ainda não';
+}
+
 function checkOver(){
   const alive=pieces.filter(Boolean);
   if(!alive.length)return;
@@ -3065,13 +3122,14 @@ function checkOver(){
     spawnRecoveryPieces();
   } else {
     // Preencher tela de game over reformulada (v11+)
-    const isNewBest=score>=best&&score>0;
+    const city=CITIES[Math.min(fase,CITIES.length-1)];
+    const isNewBest=score>bestAtRunStart&&score>0;
     document.getElementById('go-score-val').textContent=score.toLocaleString('pt-BR');
     document.getElementById('go-stat-nivel').textContent=level;
     document.getElementById('go-stat-linhas').textContent=st.linesCleared||0;
     document.getElementById('go-stat-combos').textContent=st.combos||0;
     document.getElementById('go-cmp-score').textContent=score.toLocaleString('pt-BR');
-    document.getElementById('go-cmp-best').textContent=best.toLocaleString('pt-BR');
+    document.getElementById('go-cmp-best').textContent=bestAtRunStart.toLocaleString('pt-BR');
     document.getElementById('go-cmp-coins').textContent=coins+'🪙';
     document.getElementById('go-new-record').className='go-new-record'+(isNewBest?' show':'');
     if(isNewBest){
@@ -3079,6 +3137,8 @@ function checkOver(){
     }
     document.getElementById('lose-em').textContent=score>800?'🏆':score>300?'😎':'😅';
     document.getElementById('go-encourage').textContent = isNewBest ? '' : pickMsg(MSG_GAMEOVER_ENCOURAGE);
+    renderGameOverInsights(city);
+    document.getElementById('btn-retry').textContent=isNewBest?'↺ Superar meu novo recorde':'↺ Tentar bater meu recorde';
     // Esconder botão de continuar com vídeo no modo desafio diário (1 vida só, sem continue)
     const rewardedBtn=document.getElementById('btn-rewarded');
     if(rewardedBtn) rewardedBtn.style.display = inDailyMode ? 'none' : 'block';
@@ -3187,7 +3247,7 @@ document.getElementById('btn-next').addEventListener('click',()=>{
   fase=Math.min(fase+1,CITIES.length-1);goal=0;
   board=Array.from({length:N},()=>Array(N).fill(null));
   bombMode=false;drag=null;anchor=null;hintCells=[];hintPieceIdx=-1;missionCloseToastShown=false;
-  st.boostersUsedThisMission=0;st.missionNoBoosters=true;st.missionCompleted=false;
+  beginMissionRun();
   spawnPieces();
   changeMusicTheme(fase);
   showCityTransition(fromFase,fase,CITIES[fromFase].bonus,()=>setMsg(missionStartMessage(CITIES[fase]),'info',3600));
@@ -3210,20 +3270,20 @@ document.getElementById('btn-replay-win').addEventListener('click',()=>{
   document.getElementById('ov-win').classList.remove('show');
   closeRegionQuiz();
   activeRegionQuiz=null;regionQuizAnswered=false;regionQuizMode='bonus';
-  goal=0;
+  score=0;goal=0;
   board=Array.from({length:N},()=>Array(N).fill(null));
   bombMode=false;drag=null;anchor=null;hintCells=[];
   rescueUsed=false;gridWarnActive=false;missionCloseToastShown=false;
-  st.boostersUsedThisMission=0;st.missionNoBoosters=true;st.missionCompleted=false;
+  beginMissionRun();
   spawnPieces();setMsg('Repetindo a missão! 💪','info',2000);
 });
 document.getElementById('btn-retry').addEventListener('click',()=>{
   document.getElementById('ov-lose').classList.remove('show');
   closeRegionQuiz();
   activeRegionQuiz=null;regionQuizAnswered=false;regionQuizMode='bonus';
-  lives=3;goal=0;bombMode=false;drag=null;anchor=null;hintCells=[];
+  score=0;lives=3;goal=0;bombMode=false;drag=null;anchor=null;hintCells=[];
   rescueUsed=false;gridWarnActive=false;piecesWithoutCombo=0;missionCloseToastShown=false;
-  st.boostersUsedThisMission=0;st.missionNoBoosters=true;st.missionCompleted=false;
+  beginMissionRun();
   board=Array.from({length:N},()=>Array(N).fill(null));
   spawnPieces();setMsg('Vai que é sua vez! 💪','info',1800);
   setTimeout(()=>{ if(settings.music && !musicPlaying) startMusic(); }, 500);
@@ -3357,10 +3417,11 @@ function initGame(){
   flashCells=[];floatingTexts=[];stars=[];
   gridShake={x:0,y:0,active:false,timer:0,intensity:4};
   rescueUsed=false;gridWarnActive=false;piecesWithoutCombo=0;maxOccupancySeen=0;missionCloseToastShown=false;
-  st={score:0,combos:0,maxCombo:0,linesCleared:0,level:1,streak:0,missionNoBoosters:true,missionCompleted:false,citiesCompleted:0,boostersUsedThisMission:0,dcPieces:0};
+  st={score:0,combos:0,maxCombo:0,bestMoveGain:0,linesCleared:0,level:1,streak:0,missionNoBoosters:true,missionCompleted:false,citiesCompleted:0,boostersUsedThisMission:0,dcPieces:0};
   document.getElementById('ov-win').classList.remove('show');
   document.getElementById('ov-lose').classList.remove('show');
   loadData();
+  bestAtRunStart=best;
   spawnPieces();
   setMsg('Arraste uma peça para o grid');
   loadSettings();
@@ -5494,7 +5555,7 @@ function startRainMode(){
   board=Array.from({length:N},()=>Array(N).fill(null));
   score=0;lives=1;goal=0;bombMode=false;drag=null;anchor=null;
   particles=[];flashCells=[];floatingTexts=[];stars=[];
-  st.combos=0;st.maxCombo=0;st.linesCleared=0;st.score=0;st.dcPieces=0;
+  resetMissionRunStats();
   document.getElementById('rain-bar').classList.add('show');
   spawnRainPiece();
   updateRainMode(now());
@@ -5556,8 +5617,7 @@ function startDailyChallenge(){
   score=0; level=1; xp=0; xpNext=300; lives=1; goal=0;
   bombMode=false; drag=null; anchor=null; hintCells=[];
   rescueUsed=false; gridWarnActive=false; piecesWithoutCombo=0; missionCloseToastShown=false;
-  st.boostersUsedThisMission=0; st.missionNoBoosters=true; st.missionCompleted=false;
-  st.combos=0; st.linesCleared=0; st.dcPieces=0;
+  beginMissionRun();
   spawnPieces();
   setMsg('🎯 Desafio Diário iniciado! ' + dailyChallenge.objective, 'info', 2500);
   toast('Modo Desafio Diário! 🎯','#FF6B35');
