@@ -1510,7 +1510,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.2.6-beta';
+const APP_VERSION='1.2.7-beta';
 
 let scaleX=1,scaleY=1,viewOffsetX=0,viewOffsetY=0,centeredViewport=false;
 function positionFloatingButton(id,x,y,w,h){
@@ -2719,6 +2719,12 @@ function calcAnchor(lx,ly,shape){
   return{r:ar,c:ac};
 }
 
+const TOUCH_DRAG_LIFT=58;
+function dragPosition(x,y){
+  const lift=drag&&drag.isTouch&&drag.moved?TOUCH_DRAG_LIFT:0;
+  return{x,y:y-lift};
+}
+
 function shapeKey(shape){
   return `${shape.length}x${shape[0].length}:${shape.map(row=>row.join('')).join('|')}`;
 }
@@ -2823,7 +2829,7 @@ function onDown(e){
   if(pi>=0){
     // Calcula offset do toque dentro do slot da peça
     const sx=PAD+pi*(SLOT_W+GAP), sy=Y_TRAY;
-    drag={idx:pi,piece:pieces[pi],tx:x,ty:y,sx:x,sy:y,moved:false,
+    drag={idx:pi,piece:pieces[pi],tx:x,ty:y,sx:x,sy:y,moved:false,isTouch:!!(e.touches||e.changedTouches),
       ox:x-sx-SLOT_W/2,
       oy:y-sy-SLOT_W/2
     };
@@ -2845,8 +2851,9 @@ function onMove(e){
   }
   if(!drag)return;
   if(Math.hypot(x-drag.sx,y-drag.sy)>10)drag.moved=true;
-  drag.tx=x;drag.ty=y;
-  anchor=overGrid(x,y)?calcAnchor(x,y,drag.piece.shape):null;
+  const pos=dragPosition(x,y);
+  drag.tx=pos.x;drag.ty=pos.y;
+  anchor=overGrid(pos.x,pos.y)?calcAnchor(pos.x,pos.y,drag.piece.shape):null;
 }
 document.addEventListener('touchend',onUp,{passive:false});
 document.addEventListener('mouseup',onUp);
@@ -2855,7 +2862,9 @@ function onUp(e){
   const{x,y}=getXY(e);
   if(Math.hypot(x-drag.sx,y-drag.sy)>10){
     drag.moved=true;
-    if(!anchor&&overGrid(x,y))anchor=calcAnchor(x,y,drag.piece.shape);
+    const pos=dragPosition(x,y);
+    drag.tx=pos.x;drag.ty=pos.y;
+    anchor=overGrid(pos.x,pos.y)?calcAnchor(pos.x,pos.y,drag.piece.shape):null;
   }
   if(!drag.moved&&!anchor){
     rotateTrayPiece(drag.idx);
@@ -2874,7 +2883,7 @@ function onUp(e){
         maybeShowOpeningAssist();
         checkWin();checkOver();
       }
-    } else if(overGrid(x,y)){
+    } else if(overGrid(drag.tx,drag.ty)){
       setMsg('Não cabe aqui!','err',1100);
     }
   }
