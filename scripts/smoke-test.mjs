@@ -38,7 +38,7 @@ function validateHtml(html) {
   ok('HTML tem botao de feedback beta', html.includes('id="btn-beta-feedback"'));
   ok('HTML tem funcao de feedback beta', html.includes('function openBetaFeedback()'));
   ok('Feedback aponta issues do GitHub', html.includes('github.com/Thiago789/bloco-br/issues/new'));
-  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.3.0-beta'"));
+  ok('HTML tem versao beta centralizada', html.includes("const APP_VERSION='1.3.1-beta'"));
   ok('Feedback inclui versao do app', html.includes('`- Versao: ${APP_VERSION}`'));
   ok('HTML tem botao de diagnostico beta', html.includes('id="btn-copy-diagnostics"'));
   ok('HTML copia diagnostico beta', html.includes('function copyBetaDiagnostics()') && html.includes('function betaDiagnosticsText()'));
@@ -106,6 +106,9 @@ function validateHtml(html) {
   ok('Jogada sem linha encerra a sequencia', html.includes('if(!cleared&&!inRainMode)consecutiveCombos=0'));
   ok('Preview inclui bonus da proxima sequencia', html.includes('Math.min(40,consecutiveCombos*10)') && html.includes('return {cells,combos,gain,chainBonus}'));
   ok('Nova missao zera sequencia de combos', html.includes('bestAtRunStart=best;\n  consecutiveCombos=0;'));
+  ok('Objetivo mostra sequencia ativa', html.includes('function chainStatusText()') && html.includes('Sequência x${consecutiveCombos}'));
+  ok('Sequencia informa o proximo bonus', html.includes('próxima linha +${nextBonus}') && html.includes('Math.min(40,consecutiveCombos*10)'));
+  ok('Alerta de grid cheio tem prioridade sobre sequencia', html.indexOf('if(occ2>=0.5)') < html.indexOf('const showChain=consecutiveCombos>=2'));
   validateMobileContracts(html);
 
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(match => match[1]).join('\n');

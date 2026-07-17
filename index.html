@@ -1510,7 +1510,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.3.0-beta';
+const APP_VERSION='1.3.1-beta';
 
 let scaleX=1,scaleY=1,viewOffsetX=0,viewOffsetY=0,centeredViewport=false;
 function positionFloatingButton(id,x,y,w,h){
@@ -2545,6 +2545,11 @@ function showAlmostThere(city){
   }
 }
 
+function chainStatusText(){
+  const nextBonus=Math.min(40,consecutiveCombos*10);
+  return `🔥 Sequência x${consecutiveCombos} · próxima linha +${nextBonus}`;
+}
+
 function drawObjective(){
   if(inRainMode){
     const cy=Y_OBJ+H_OBJ/2;
@@ -2572,7 +2577,9 @@ function drawObjective(){
     txt(warnLabel,VW/2,cy+9,9,occColor,'center');
   } else {
     const mc={ok:'#009C3B',err:'#e24b4a',info:'#F4C430','':'rgba(245,240,232,0.4)'};
-    if(msg)txt(msg,VW/2,cy+12,9,mc[msgType]||mc[''],'center');
+    const showChain=consecutiveCombos>=2||(consecutiveCombos===1&&!msg);
+    if(showChain)txt(chainStatusText(),VW/2,cy+12,9,'#FF8A3D','center');
+    else if(msg)txt(msg,VW/2,cy+12,9,mc[msgType]||mc[''],'center');
     else txt(objectiveHint(city),VW/2,cy+12,8,'rgba(245,240,232,0.35)','center');
   }
 }
