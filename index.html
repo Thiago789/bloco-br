@@ -302,6 +302,10 @@ body[data-theme] .jp-city,body[data-theme] .jp-world-pill{background:var(--theme
 .rain-preview-btn{border-color:rgba(58,134,255,.35);color:#7fb5ff;background:rgba(58,134,255,.1);}
 #rain-bar{position:fixed;top:0;left:0;right:0;background:linear-gradient(90deg,#3A86FF,#00C4B4);padding:8px 14px;display:none;align-items:center;justify-content:space-between;z-index:19;color:#fff;font-size:11px;font-weight:900;box-shadow:0 5px 18px rgba(0,0,0,.24);}
 #rain-bar.show{display:flex;}
+#rain-bar.urgent{background:linear-gradient(90deg,#D85A30,#E24B4A);box-shadow:0 5px 22px rgba(226,75,74,.38);}
+#rain-bar.pulse{animation:rainUrgency .7s ease-in-out infinite;}
+#rain-bar.danger .rain-clock{color:#fff;text-shadow:0 0 10px rgba(255,255,255,.65);}
+@keyframes rainUrgency{50%{box-shadow:0 5px 30px rgba(226,75,74,.72);}}
 .rain-bar-main{display:flex;align-items:center;gap:9px;}
 .rain-clock{font-family:'Baloo 2',cursive;font-size:15px;min-width:38px;color:#fff;}
 #rain-bar-exit{background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:5px 10px;color:#fff;font:800 10px 'Nunito',sans-serif;cursor:pointer;}
@@ -1506,7 +1510,7 @@ const Y_OBJ=Y_PROG+H_PROG+2;
 const Y_TRAY=Y_OBJ+H_OBJ+GAP;
 const Y_BOOST=Y_TRAY+H_TRAY+GAP;
 const SLOT_W=Math.floor((VW-PAD*2-GAP*2)/3);
-const APP_VERSION='1.2.5-beta';
+const APP_VERSION='1.2.6-beta';
 
 let scaleX=1,scaleY=1,viewOffsetX=0,viewOffsetY=0,centeredViewport=false;
 function positionFloatingButton(id,x,y,w,h){
@@ -1583,6 +1587,7 @@ let rainLinesCleared=0;
 let rainBest=0;
 let rainPlays=0;
 let rainPausedAt=0;
+let rainLastSecond=60;
 let rainFinished=false;
 let bestAtRunStart=0;
 
@@ -5582,6 +5587,7 @@ function startRainMode(){
   rainPiecesPlaced=0;
   rainLinesCleared=0;
   rainPausedAt=0;
+  rainLastSecond=RAIN_DURATION_MS/1000;
   rainEndsAt=now()+RAIN_DURATION_MS;
   try{
     rainBest=parseInt(localStorage.getItem('bbr2_rain_best'))||0;
@@ -5591,7 +5597,9 @@ function startRainMode(){
   score=0;lives=1;goal=0;bombMode=false;drag=null;anchor=null;
   particles=[];flashCells=[];floatingTexts=[];stars=[];
   resetMissionRunStats();
-  document.getElementById('rain-bar').classList.add('show');
+  const rainBar=document.getElementById('rain-bar');
+  rainBar.classList.remove('urgent','pulse','danger');
+  rainBar.classList.add('show');
   spawnRainPiece();
   updateRainMode(now());
   setMsg('A peça caiu. Toque para girar!','info',2200);
@@ -5602,11 +5610,27 @@ function updateRainMode(ts){
   if(!inRainMode||rainFinished||rainPausedAt)return;
   const remaining=Math.max(0,rainEndsAt-ts);
   const seconds=Math.ceil(remaining/1000);
+  const rainBar=document.getElementById('rain-bar');
   const timeEl=document.getElementById('rain-time');
   const scoreEl=document.getElementById('rain-score');
+  const urgent=remaining<=10000&&remaining>0;
+  rainBar.classList.toggle('urgent',urgent);
+  rainBar.classList.toggle('pulse',urgent&&settings.animations);
+  rainBar.classList.toggle('danger',remaining<=5000&&remaining>0);
+  if(seconds!==rainLastSecond){
+    rainLastSecond=seconds;
+    soundRainCountdown(seconds);
+  }
   if(timeEl)timeEl.textContent=seconds+'s';
   if(scoreEl)scoreEl.textContent=score+' pts';
   if(remaining<=0)finishRainMode('Tempo encerrado');
+}
+
+function soundRainCountdown(seconds){
+  if(seconds<1||seconds>5)return;
+  const finalTick=seconds===1;
+  playTone(finalTick?880:520,finalTick?'triangle':'sine',finalTick?0.16:0.08,finalTick?0.2:0.11);
+  if(seconds<=3)vibrate(14);
 }
 
 function finishRainMode(reason){
@@ -5615,7 +5639,7 @@ function finishRainMode(reason){
   inRainMode=false;
   rainPausedAt=0;
   drag=null;anchor=null;pieces=[null,null,null];
-  document.getElementById('rain-bar').classList.remove('show');
+  document.getElementById('rain-bar').classList.remove('show','urgent','pulse','danger');
   const previousBest=rainBest;
   const isNewRecord=score>previousBest;
   rainBest=Math.max(rainBest,score);
@@ -5662,7 +5686,7 @@ function finishRainMode(reason){
 
 function exitRainMode(){
   inRainMode=false;rainFinished=true;rainPausedAt=0;drag=null;anchor=null;
-  document.getElementById('rain-bar').classList.remove('show');
+  document.getElementById('rain-bar').classList.remove('show','urgent','pulse','danger');
   document.getElementById('ov-rain-result').classList.remove('show');
   initGame();
   setMsg('De volta à jornada','info',1300);
